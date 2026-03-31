@@ -910,6 +910,11 @@
       </div>
     </div>
 
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Comentario</label>
+      <input type="text" id="dia-comentario" placeholder="¿Cómo fue la actividad?" style="width:100%">
+    </div>
+
     <div class="divider"></div>
 
     <!-- Estudios del día -->
@@ -989,6 +994,7 @@
     <div id="ficha-historial" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-ficha')">Cerrar</button>
+      <button class="btn btn-danger btn-sm" onclick="eliminarEstudianteActivo()" style="margin-right:auto">🗑 Eliminar</button>
       <button class="btn btn-primary btn-sm" onclick="editarEstudianteActivo()">✏️ Editar</button>
     </div>
   </div>
@@ -1912,7 +1918,7 @@ async function renderMapaPines() {
 function exportarDatos() {
   const misVisitas = visitas.filter(v => !currentUser || v.usuario === currentUser);
   const payload = {
-    version: 2,
+    version: 3,
     usuario: currentUser,
     exportadoEn: new Date().toISOString(),
     visitas: misVisitas,
@@ -1938,7 +1944,7 @@ function importarDatos(e) {
       const data = JSON.parse(ev.target.result);
       let resumen = [];
 
-      // Visitas
+      // Visitas — merge por id
       const importadas = data.visitas || [];
       if (importadas.length > 0) {
         const existingIds = new Set(visitas.map(v => v.id));
@@ -1948,20 +1954,45 @@ function importarDatos(e) {
         resumen.push(`${nuevas.length} visita${nuevas.length !== 1 ? 's' : ''} nuevas`);
       }
 
-      // Estudiantes
+      // Estudiantes — merge por id, actualiza sesiones si ya existe
       const impEst = data.estudiantes || [];
       if (impEst.length > 0) {
         const existingIds = new Set(estudiantes.map(e => e.id));
         const nuevos = impEst.filter(e => !existingIds.has(e.id));
+        // Merge sesiones de estudiantes existentes
+        impEst.filter(e => existingIds.has(e.id)).forEach(impE => {
+          const local = estudiantes.find(e => e.id === impE.id);
+          if (!local) return;
+          const localSesIds = new Set((local.sesiones || []).map(s => s.fecha + s.comentario));
+          const nuevasSes = (impE.sesiones || []).filter(s => !localSesIds.has(s.fecha + s.comentario));
+          local.sesiones = [...(local.sesiones || []), ...nuevasSes];
+        });
         estudiantes = [...estudiantes, ...nuevos];
         saveEstudiantes();
         resumen.push(`${nuevos.length} estudiante${nuevos.length !== 1 ? 's' : ''} nuevos`);
       }
 
-      // Horas — merge by month key
+      // Horas — merge por mes y por día, preservando comentarios y estudios
       const impHoras = data.horas || {};
-      Object.keys(impHoras).forEach(k => {
-        if (!horasData[k]) horasData[k] = impHoras[k];
+      Object.keys(impHoras).forEach(mesK => {
+        if (!horasData[mesK]) {
+          horasData[mesK] = impHoras[mesK];
+        } else {
+          // Merge días dentro del mes
+          const diasImp = impHoras[mesK].dias || {};
+          Object.keys(diasImp).forEach(diaK => {
+            if (!horasData[mesK].dias[diaK]) {
+              horasData[mesK].dias[diaK] = diasImp[diaK];
+            } else {
+              // Preservar comentario si no había uno local
+              const local = horasData[mesK].dias[diaK];
+              if (!local.comentario && diasImp[diaK].comentario) local.comentario = diasImp[diaK].comentario;
+              if (!local.plan && diasImp[diaK].plan) local.plan = diasImp[diaK].plan;
+              if (!local.real && diasImp[diaK].real) local.real = diasImp[diaK].real;
+            }
+          });
+          if (!horasData[mesK].meta && impHoras[mesK].meta) horasData[mesK].meta = impHoras[mesK].meta;
+        }
       });
       if (Object.keys(impHoras).length > 0) {
         saveHoras();
@@ -1973,7 +2004,7 @@ function importarDatos(e) {
       msg.style.display = 'block';
       showToast('✓ Backup restaurado');
       renderResumen();
-    } catch {
+    } catch(err) {
       alert('El archivo no es válido. Asegurate de usar un backup exportado desde Ministeriapp.');
     }
     e.target.value = '';
@@ -2060,10 +2091,12 @@ function renderCalendario() {
     ].filter(Boolean).join(' ');
     const hrsLabel = hasReal ? `${info.real}h` : (hasPlan ? `${info.plan}h` : '');
     const hasEstudios = info.estudios && info.estudios.length > 0;
-    html += `<div class="${cls}" onclick="abrirDia('${key}', ${d})">
+    const hasComentario = info.comentario && info.comentario.length > 0;
+    html += `<div class="${cls}" onclick="abrirDia('${key}', ${d})" title="${hasComentario ? info.comentario : ''}">
       <span class="cal-day-num">${d}</span>
       ${hrsLabel ? `<span class="cal-day-hrs">${hrsLabel}</span>` : ''}
       ${hasEstudios ? `<span style="font-size:8px;color:var(--info)">📖${info.estudios.length}</span>` : ''}
+      ${hasComentario && !hrsLabel ? `<span style="font-size:8px;color:var(--text3)">💬</span>` : ''}
     </div>`;
   }
   container.innerHTML = html;
@@ -2131,6 +2164,7 @@ function abrirDia(key, d) {
   document.getElementById('modal-dia-titulo').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
   document.getElementById('dia-plan').value = info.plan || '';
   document.getElementById('dia-real').value = info.real || '';
+  document.getElementById('dia-comentario').value = info.comentario || '';
   // Render studies
   renderEstudiosDia(info.estudios || []);
   openModal('modal-dia');
@@ -2201,9 +2235,10 @@ function guardarDia() {
   const mes = getMes();
   const plan = parseFloat(document.getElementById('dia-plan').value) || 0;
   const real = parseFloat(document.getElementById('dia-real').value) || 0;
+  const comentario = document.getElementById('dia-comentario').value.trim();
   const existing = mes.dias[activeDia] || {};
-  if (plan > 0 || real > 0 || (existing.estudios && existing.estudios.length)) {
-    mes.dias[activeDia] = { ...existing, plan, real };
+  if (plan > 0 || real > 0 || comentario || (existing.estudios && existing.estudios.length)) {
+    mes.dias[activeDia] = { ...existing, plan, real, comentario };
   } else {
     delete mes.dias[activeDia];
   }
@@ -2320,6 +2355,16 @@ function editarEstudianteActivo() {
   openModal('modal-estudiante');
 }
 
+function eliminarEstudianteActivo() {
+  const est = estudiantes.find(e => e.id === activeEstId);
+  if (!est) return;
+  if (!confirm(`¿Eliminar a ${est.nombre}? Se borrarán también todas sus sesiones registradas.`)) return;
+  estudiantes = estudiantes.filter(e => e.id !== activeEstId);
+  saveEstudiantes();
+  closeModal('modal-ficha');
+  renderEstudiantes();
+  showToast('🗑 Estudiante eliminado');
+}
 
 function abrirEditar(id) {
   activeVisitId = id;
