@@ -84,11 +84,14 @@
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     display: flex;
-    padding: 0 8px;
+    overflow-x: auto;
+    padding: 0;
     gap: 0;
+    scrollbar-width: none;
   }
+  .nav-tabs::-webkit-scrollbar { display: none; }
   .nav-tab {
-    padding: 12px 10px;
+    padding: 12px 14px;
     font-size: 12px;
     font-weight: 500;
     color: var(--text2);
@@ -98,6 +101,7 @@
     transition: all 0.2s;
     flex: 1;
     text-align: center;
+    min-width: 0;
   }
   .nav-tab.active {
     color: var(--accent);
@@ -594,10 +598,10 @@
 </header>
 
 <nav class="nav-tabs">
-  <div class="nav-tab active" onclick="showPage('lista')">📋 Visitas</div>
-  <div class="nav-tab" onclick="showPage('horas')">📅 Actividad</div>
-  <div class="nav-tab" onclick="showPage('estudiantes')">📖 Estudios</div>
-  <div class="nav-tab" onclick="showPage('resumen')">📊 Resumen</div>
+  <div class="nav-tab active" data-page="lista" onclick="showPage('lista')">📋 Visitas</div>
+  <div class="nav-tab" data-page="horas" onclick="showPage('horas')">⏱ Actividad</div>
+  <div class="nav-tab" data-page="estudiantes" onclick="showPage('estudiantes')">📖 Estudios</div>
+  <div class="nav-tab" data-page="resumen" onclick="showPage('resumen')">📊 Resumen</div>
 </nav>
 
 <main class="main">
@@ -611,36 +615,49 @@
         <div style="font-family:'DM Serif Display',serif;font-size:16px;font-weight:400">＋ Registrar visita</div>
         <span id="registrar-toggle-icon" style="font-size:18px;color:var(--text3)">›</span>
       </div>
-      <div id="registrar-form-body" style="display:none;margin-top:12px">
+      <div id="registrar-form-body" style="display:none;margin-top:14px">
 
       <!-- Dirección + Apto -->
-      <div style="display:flex;gap:8px;margin-bottom:6px">
-        <div class="autocomplete-wrap" style="flex:1">
-          <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;color:var(--text)">
-          <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Dirección / Casa</div>
+        <div style="display:flex;gap:8px">
+          <div class="autocomplete-wrap" style="flex:1">
+            <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;color:var(--text)">
+            <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
+          </div>
+          <div>
+            <input type="text" id="f-apto" placeholder="Apto" style="width:65px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+          </div>
         </div>
-        <input type="text" id="f-apto" placeholder="Apto" style="width:65px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+        <div class="addr-detected" id="addr-detected" style="margin-top:4px"></div>
       </div>
 
-      <!-- Territorio (justo debajo de dirección) -->
-      <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
-        <div class="addr-detected" id="addr-detected" style="flex:1;margin:0"></div>
-        <select id="f-territorio" onchange="this.removeAttribute('data-auto')" style="width:90px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none">
-          <option value="">T —</option>
+      <!-- Territorio -->
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Territorio</div>
+        <select id="f-territorio" onchange="this.removeAttribute('data-auto')" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+          <option value="">— Seleccioná —</option>
         </select>
       </div>
 
       <!-- Fecha + Horario -->
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="date" id="f-fecha" style="flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
-        <select id="f-horario" style="width:85px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
-          <option value="AM">🌅 AM</option>
-          <option value="PM">🌇 PM</option>
-        </select>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Fecha</div>
+          <input type="date" id="f-fecha" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Horario</div>
+          <select id="f-horario" style="width:90px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+            <option value="AM">🌅 AM</option>
+            <option value="PM">🌇 PM</option>
+          </select>
+        </div>
       </div>
 
       <!-- Tipo -->
-      <div style="margin-bottom:10px">
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Tipo de visita</div>
         <select id="f-tipo" onchange="toggleTipoFields()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
           <option value="nc">🔴 No en casa</option>
           <option value="revisita">🔵 Revisita</option>
@@ -676,8 +693,6 @@
         <button class="btn btn-primary" style="flex:1" onclick="registrarVisita()">Guardar</button>
         <button class="btn btn-secondary" onclick="limpiarForm()">✕</button>
       </div>
-
-      </div><!-- end registrar-form-body -->
 
       </div><!-- end registrar-form-body -->
     </div><!-- end registrar card -->
@@ -1158,12 +1173,18 @@ function save() {
 // ── PAGES ──────────────────────────────────────────────
 function showPage(page) {
   ['lista','horas','estudiantes','resumen'].forEach(p => {
-    document.getElementById('page-' + p).classList.toggle('hidden', p !== page);
+    const el = document.getElementById('page-' + p);
+    if (p === page) {
+      el.classList.remove('hidden');
+      el.style.display = 'block';
+    } else {
+      el.classList.add('hidden');
+      el.style.display = 'none';
+    }
   });
-  document.querySelectorAll('.nav-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['lista','horas','estudiantes','resumen'][i] === page);
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === page);
   });
-  // Hide map when leaving lista
   if (page !== 'lista' && mapaVisible) {
     mapaVisible = false;
     document.getElementById('mapa-visitas-wrap').style.display = 'none';
@@ -2306,8 +2327,10 @@ document.addEventListener('click', e => {
 });
 
 // ── START ──────────────────────────────────────────────
-init();
-renderLista();
+document.addEventListener('DOMContentLoaded', function() {
+  init();
+  showPage('lista');
+});
 
 // ── SERVICE WORKER ──────────────────────────────────────
 if ('serviceWorker' in navigator) {
