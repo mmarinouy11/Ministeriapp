@@ -1824,9 +1824,10 @@ function getMes() {
 
 function setMeta(val) {
   const mes = getMes();
-  mes.meta = val;
+  // Toggle off if already selected
+  mes.meta = mes.meta === val ? 0 : val;
   saveHoras();
-  document.querySelectorAll('.meta-btn').forEach(b => b.classList.toggle('active', +b.dataset.meta === val));
+  document.querySelectorAll('.meta-btn').forEach(b => b.classList.toggle('active', +b.dataset.meta === mes.meta));
   renderProgreso();
 }
 
@@ -1891,19 +1892,27 @@ function renderCalendario() {
 function renderProgreso() {
   const mes = getMes();
   const wrap = document.getElementById('horas-progress-wrap');
-  if (!mes.meta) { wrap.style.display = 'none'; return; }
+  const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
+  const totalPlan = Object.values(mes.dias).reduce((s, d) => s + (d.plan || 0), 0);
+
+  // Always show if there are hours or a meta set
+  if (!mes.meta && totalReal === 0 && totalPlan === 0) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
 
-  const totalPlan = Object.values(mes.dias).reduce((s, d) => s + (d.plan || 0), 0);
-  const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
-  const pctReal = Math.min(100, Math.round(totalReal / mes.meta * 100));
-  const pctPlan = Math.min(100, Math.round(totalPlan / mes.meta * 100));
-
-  document.getElementById('horas-real-label').textContent = `${totalReal} / ${mes.meta} hs`;
+  if (mes.meta) {
+    const pctReal = Math.min(100, Math.round(totalReal / mes.meta * 100));
+    const pctPlan = Math.min(100, Math.round(totalPlan / mes.meta * 100));
+    document.getElementById('horas-real-label').textContent = `${totalReal} / ${mes.meta} hs`;
+    document.getElementById('horas-bar-real').style.width = pctReal + '%';
+    document.getElementById('horas-bar-plan').style.width = pctPlan + '%';
+    document.getElementById('horas-meta-label').textContent = `Meta: ${mes.meta} hs`;
+  } else {
+    document.getElementById('horas-real-label').textContent = `${totalReal} hs`;
+    document.getElementById('horas-bar-real').style.width = '100%';
+    document.getElementById('horas-bar-plan').style.width = '0%';
+    document.getElementById('horas-meta-label').textContent = 'Sin meta definida';
+  }
   document.getElementById('horas-plan-label').textContent = `${totalPlan} hs planificadas`;
-  document.getElementById('horas-meta-label').textContent = `Meta: ${mes.meta} hs`;
-  document.getElementById('horas-bar-real').style.width = pctReal + '%';
-  document.getElementById('horas-bar-plan').style.width = pctPlan + '%';
 }
 
 function abrirDia(key, d) {
@@ -2196,21 +2205,28 @@ let addrDebounce;
 let addrSuggestionsData = [];
 let selectedStreet = '';
 
+// ── Lista completa de calles del territorio (OSM) ────────
+const CALLES = ["14 de Julio","2 de Mayo","20 de Febrero","20 de Setiembre","21 de Abril","21 de Setiembre","26 de Marzo","4 de Julio","Acevedo Díaz","Achiras","Acosta y Lara","Agaces","Aguapey","Agustina Contucci de Oribe","Agustín Abreu","Agustín Sosa","Agustín de Urtubey","Alberto Lasplaces","Alejandro Beisso","Alejandro Chucarro","Alejo Rosell y Rius","Alfredo Caramella","Alfredo Vidal y Fuentes","Algarrobo","Alicante","Alonso de Ercilia","Altamirano","Ana Monterroso de Lavalleja","Andresito Guacurarí","Andrés Lamas","Antonio Dalmiro Costa","Antonio F. Saravia","Antonio Machado","Apóstoles","Arazatí","Arenal Grande","Arezzo","Arquitecto Santiago Danuzio","Asilo","Atanasio Lapido","Aureliano Rodríguez Larreta","Avelino Miranda","Avenida 15 de Febrero de 1985","Avenida 18 de Julio","Avenida 8 de Octubre","Avenida Brasil","Avenida Cataluña","Avenida Centenario","Avenida Daniel Fernández Crespo","Avenida Doctor Alfredo Navarro","Avenida Doctor Américo Ricaldoni","Avenida Doctor Francisco Soca","Avenida Doctor Lorenzo Merola","Avenida Doctor Luis Morquio","Avenida Doctor Manuel Albo","Avenida Dámaso Antonio Larrañaga","Avenida Federico R. Vidiella","Avenida General Flores","Avenida General José Garibaldi","Avenida General Rivera","Avenida General San Martín","Avenida Ingeniero Luis P. Ponce","Avenida Italia","Avenida Jacobo Varela","Avenida José Pedro Varela","Avenida Luis Alberto de Herrera","Avenida Ramón Anador","Avenida Ramón V. Benzano","Avenida República de Corea","Avenida Uruguay","Ayacucho","Ayuí","Azambuya","Azara","Baltasar Vargas","Barroso","Bartolito Mitre","Basilio Pereira de la Luz","Belgrano","Benito Chain","Benito Juárez","Bernandina Fragoso de Rivera","Blandengues","Bonaparte","Brazo Largo","Bulevar 26 de Marzo","Bulevar España","Bulevar General Artigas","Bulevar José Batlle y Ordóñez","Bulevar Juan Benito Blanco","Cabildo","Cagancha","Cairoli","Calle 3 Metros","Callejon Colorado","Camino Corrales","Camino de los Hormigueros","Camoatí","Canelones","Cangallo","Canstatt","Capitán Videla","Caraguatá","Cardal","Cardoso","Caribes","Carlitos Roldán","Carlos Anaya","Carlos Crocker","Carlos G. Villademoros","Carlos Reyles","Catalán","Cavour","Ceibal","Cerro Largo","Ceuta","Chacabuco","Chaná","Charrúa","Chiavari","Chiriguanos","Chubut","Ciclovía Boulevard","Cipriano Miró","Cipriano Payan","Circunvalación Monumento a Batlle","Cirene","Ciudad de Bahía Blanca","Colegiales","Colibrí","Colonia","Colorado","Comandante Braga","Comercio","Comodoro Coe","Concepción Arenal","Constitución","Constituyente","Consulado","Contador Luis E. Lecueder","Continuación Echaurri","Coquimbo","Cornelio Cantera","Coronel Alegre","Coronel Federico Brandsen","Coronel Justo Arechaga","Coronel Lasala","Coronel Lucas Píriz","Coruña","Cufré","Cuñapirú","Cádiz","D'Azeglio","Daca","Daniel Muñoz","Defensa","Democracia","Demóstenes","Diego Lamas","Dionisio López","Dionisio Oribe","Doctor Atilio Narancio","Doctor Augusto Turenne","Doctor Domingo Aramburú","Doctor Emilio Frugoni","Doctor Enrique Pouey","Doctor Francisco Labandeira","Doctor Francisco Simón","Doctor Gastón Ramón","Doctor Gustavo Gallinal","Doctor Hermógenes Álvarez","Doctor Homero de Gregorio","Doctor Hugo Antuña","Doctor Isabelino J. Bosch","Doctor Joaquín Requena","Doctor José Brito Foresti","Doctor José Irureta Goyena","Doctor José Luis Bado","Doctor José María Muñoz","Doctor José María Penco","Doctor José Pugnalini","Doctor Juan Antonio Rodríguez","Doctor Juan B. Morelli","Doctor Juan Campisteguy","Doctor Juan Carlos Patrón","Doctor Juan José de Amézaga","Doctor Julio César Grauert","Doctor Luis Alberto Surraco","Doctor Luis Bonavita","Doctor Luis Melián Lafinur","Doctor Magested","Doctor Manuel Landeira","Doctor Manuel Quintela","Doctor Marcelino Izcua Barbat","Doctor Mario Cassinoni","Doctor Martín C. Martínez","Doctor Pablo de María","Doctor Pedro Escuder Núñez","Doctor Prudencio de Pena","Doctor Raúl Piaggio Blanco","Doctor Salvador Ferrer Serra","Doctor Silvestre Pérez","Doctor Washington Buño","Dolores Pereira de Rosell","Domingo Ereño","Domingo J. Cruz","Dulcinea","Durazno","Duvimioso Terra","Echeandía","Echevarriarza","Edil Hugo Prato","Eduardo Acevedo","Eduardo Mac Eachen","Eduardo Víctor Haedo","Emilio Raña","Emilio Reus","Enrique Clay","Enrique Montes","Escocia","Espartillo","Estero Bellaco","Estivao","Eufemio Masculino","Famaillá","Federico Susviela Guarch","Feliciano Rodríguez","Felipe Sanguinetti","Fermín Ferreira","Figurita","Florencio Varela","Francisco Anzani","Francisco Araucho","Francisco Bauzá","Francisco Canaro","Francisco Joaquín Muñoz","Francisco Llambí","Francisco Rodrigo","Francisco Vidiella","Francisco Vázquez Cores","Francisco de Medina","Fray Bentos","Fray Manuel de Ubeda","Félix Buxareo","Gaboto","Gabriel Pereira","Galatea","Galicia","General Arquitecto Alfredo Baldomir","General Carlos María de Alvear","General Enrique Martínez","General Espartero","General Félix Laborde","General Ignacio Oribe","General José Esteban Brito del Pino","General José Villagrán","General Julio Roletti","General Las Heras","General Pagola","General Timoteo Aparicio","General Urquiza","Gerard Busquets","Gerardo Grasso","Gilbert","Gloria","Gobernador Viana","Goes","Gregorio Funes","Guadalupe","Gualberto Méndez","Gualeguay","Guaná","Guaviyú","Guayabos","Guayaqui","Gutiérrez","Himalaya","Hocquart","Horacio","Hugo Alfaro","Hugo de los Santos Recarte","Humaita","Héctor Scarone","Ibirapitá","Ignacio Manuel Altamirano","Ignacio Núñez","Inca","Ingavi","Ingeniero José Serrato","Irlanda","Isabela","Isla de Gorriti","Itapebí","Jacinto Vera","Jaime Cibils","Joanicó","Joaquín Campana","Joaquín Secco Illa","Joaquín Velazco","Joaquín de Salterain","Jorge Canning","José Agustín Iturriaga","José Antonio Cabrera","José Arismendi","José Catalá","José E. Culta","José Ellauri","José Enrique Rodó","José Félix Zubillaga","José Hernández","José L. Osorio","José L. Terra","José Leguizamón","José Martí","José Mazzini","José Nicolás Oxilia","Juan A. Guzmán","Juan Antonio Lenoble","Juan Arrieta","Juan Cabal","Juan Cruz Varela","Juan D. Jackson","Juan Francisco Martínez","Juan Jacobo Rousseau","Juan José Debali","Juan José Herrera","Juan José Quesada","Juan Julio Raissignier","Juan Manuel Blanes","Juan Ortiz","Juan Pablo Laguna","Juan Parra del Riego","Juan Paullier","Juan Ramón Gómez","Juan Spikerman","Juan Vicente Arcos","Juan de Dios Peza","Juan de León","Juana de Arco","Julio César","Justicia","Justo Maeso","La Gaceta","La Paz","Larravide","Leonor Horticou","Leopoldo Alas","Lepanto","Libertad","Libres","Lima","Lindoro Forteza","Lombardini","Lord Ponsomby","Lorenzo Fernández","Lorenzo Justiniano Pérez","Lucas Moreno","Luciano Romero","Luis B. Cavia","Luis Lamas","Luis Sambucetti","Lyón","Líber Arce","Madreselva","Magallanes","Magariños Cervantes","Maipú","Malbajar","Maldonado","Manuel Alonso","Manuel Fernández Luna","Manuel Haedo","Manuel Pagola","Marcelino Berthelot","Marcelino Sosa","Marco Bruto","Marcos de Avellaneda","Mariano Moreno","Marne","Martín Echaurri","Martín Fierro","Martín García","María Stagnero de Munar","Mateo Cabral","Mateo Vidal","Matías Abacu","Mauricia Batalla","Mburucuyá","Menéndez y Pelayo","Mercedes","Miguel Barreiro","Miguel Martínez","Miguel del Corro","Miguelete","Minas","Mocoreta","Molinos de la Unión","Mondragón","Monseñor Domingo Tamburini","Monte Caseros","Morales","Murcia","Méndez Núñez","Navarra","Neyra","Nicaragua","Nimes","Nuestra Señora de la Encina","Nueva Palmira","Obligado","Odense","Omar Odriozola","Orestes Araujo","Palmar","Pampillo y Novas","Pamplona","Pan de Azúcar","Parma","Pasaje A","Pasaje Asilo","Pasaje B","Pasaje Bolívar","Pasaje Chubut","Pasaje Cristóbal Echevarriarza","Pasaje Echemendy","Pasaje Pernas","Pasaje Vecinal","Pasaje Vitruvio","Pasaje de la Fuente","Pasaje de la Vía","Pascual Paladino","Paso del Cuello","Paysandú","Pedernal","Pedro Bustamante","Pedro Campbell","Pedro Errazquin","Pedro Francisco Berro","Pedro Olmida","Pedro P. de la Sierra","Pedro Ricaldoni","Pedro Vidal","Pedro Viera","Pedro de Alarcón","Pernas","Pesaro","Plácido Ellauri","Porongos","Presidente Berro","Presidente General Oscar Diego Gestido","Presidente Giro","Presidente Lorenzo Batlle","Presidente Oribe","Profesor Clemente Estable","Profesor Doctor Julio A. Bauzá","Profesor Doctor Pablo Purriel","Profesor Juan Carlos Sabat Pebet","Provincias Vascongadas","Prudencio Vázquez y Vega","Purificación","Quichuas","Quijote","Rafael Pastoriza","Rambla","Rambla Armenia","Rambla Presidente Charles de Gaulle","Rambla República del Perú","Ramón Masini","Ramón Ortiz","Ramón del Valle Inclán","Ramón y Cajal","Regimiento 9","República","República Dominicana","República del Salvador","Rivadavia","Rizal","Rocha","Roque Barcia","Roque Gómez","Saladero Fariña","Saldanha Da Gama","San Antonio","San Lorenzo","Sancho Panza","Santiago Gadea","Santiago Nievas","Santiago Vázquez","Senda Alfredo Olivera","Senda Juan Carlos Ceriani","Senda Juan Jacinto López Testa","Senda Leandro Gómez Harley","Senda René Borjas","Senda Virgilio Pereyra","Sendero Leonel Rocca","Sendero Peatonal Profesor Alberto Langlade","Setembrino Pereda","Siena","Silvestre Blanco","Simón Bolívar","Somme","Soriano","Sucre","Suipacha","Talcahuano","Teniente General Pablo Galarza","Teniente Juan S Walcalde","Teniente Raimundo Rosas","Thiebaut","Thompson","Tiburcio Gómez","Timbó","Tomás Claramunt","Tomás Gomensoro","Tomás Gómez","Tomás Muniz","Trabajo","Trento","Tristán Narvaja","Trípoli","Tuyutí","Túnez","Valladolid","Vehicular/ Peatonal","Vilardebó","Vitruvio","Víctor Arreguine","Washington Beltrán","Yaguarí","Yaro","Yucatán","Ábalos","Ángel María Cusano"];
+
+function normStr(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function onDireccionInput() {
   clearTimeout(addrDebounce);
   const q = document.getElementById('f-direccion').value.trim();
   const sug = document.getElementById('addr-suggestions');
   const det = document.getElementById('addr-detected');
 
-  if (q.length < 3) { sug.style.display = 'none'; det.style.display = 'none'; return; }
+  if (q.length < 2) { sug.style.display = 'none'; det.style.display = 'none'; return; }
 
-  // Split input into street part and number part
+  // Split into street + number
   const numMatch = q.match(/^(.*?)\s+(\d+\S*)$/);
   const streetPart = numMatch ? numMatch[1].trim() : q;
   const numPart = numMatch ? numMatch[2] : '';
 
-  // If street was already selected and user added a number → geocode
-  if (selectedStreet && numPart && normStr(q).startsWith(normStr(selectedStreet))) {
+  // If street selected and number typed → geocode
+  if (selectedStreet && numPart) {
     sug.style.display = 'none';
     det.className = 'addr-detected';
     det.textContent = '📍 Buscando territorio...';
@@ -2219,55 +2235,22 @@ function onDireccionInput() {
     return;
   }
 
-  // Always show street suggestions based on the street part
+  if (!numPart) selectedStreet = '';
   det.style.display = 'none';
-  const matches = buscarCalles(streetPart);
+
+  // Search local list instantly
+  const qn = normStr(streetPart);
+  const matches = CALLES.filter(c => normStr(c).includes(qn)).slice(0, 8);
+
   if (matches.length) {
     addrSuggestionsData = matches.map(s => ({ street: s, num: numPart }));
     sug.innerHTML = matches.map((s, i) => {
       const label = s + (numPart ? ' ' + numPart : '');
-      return `<div class="addr-suggestion-item" onclick="selectSuggestion(${i})"><strong>${label}</strong><br><small style="color:var(--text3)">Blanqueada, Montevideo</small></div>`;
+      return `<div class="addr-suggestion-item" onclick="selectSuggestion(${i})"><strong>${label}</strong></div>`;
     }).join('');
     sug.style.display = 'block';
   } else {
-    sug.innerHTML = '<div class="addr-suggestion-item" style="color:var(--text3)">Sin resultados en el territorio</div>';
-    sug.style.display = 'block';
-  }
-}
-
-// ── Calles del territorio (autocompletado local) ─────────
-const CALLES = ["8 de Octubre","Agaces","Alonso de Ercilla","Antonio Normosa","Apóstol","Arezzo","Av. Gral. Garibaldi","Av. José Pedro Varela","Av. Larrañaga","Av. Luis Alberto de Herrera","Av. Monte Caseros","Av. República de Cuba","Avellaneda","Brazo Largo","C. Anaya","Cabildo","Camino Chiquito","Camino Corrales","Carlos A. López","Charrúa","Dr. Luis A. Suárez","Emilio Raña","Francisco Muñoz","Freybenio","Fuentes Chiquitinas","Giménez","Gral. Flores","Gral. Garibaldi","Gral. Urquiza","Himberg","Instrucciones","Javier Barrios Amorín","Joanicó","José Batlle y Ordóñez","José Enrique Rodó","José Pedro Varela","Juan F. Martínez","Juan Fernández Martínez","Julio Ardao","Larrañaga","Lecoq","Luis Alberto de Herrera","Millán","Monte Caseros","Odriozola","Oduber","Pernas","Pesaro","Propios","Purificación","R. Gómez","República de Corea","República de Cuba","Sayago","Sierra Capdevila","Szymiento","Tambo","Thomson","Tomás Claramunt"];
-
-function normStr(s) {
-  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-function buscarCalles(q) {
-  const qn = normStr(q);
-  return CALLES.filter(c => normStr(c).includes(qn)).slice(0, 7);
-}
-
-async function buscarNominatim(q) {
-  const sug = document.getElementById('addr-suggestions');
-  try {
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=uy&limit=1'
-      + '&q=' + encodeURIComponent(q + ', Montevideo, Uruguay')
-      + '&viewbox=-56.177,-34.867,-56.138,-34.907&bounded=0';
-    const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-    const data = await res.json();
-    if (data && data.length) {
-      aplicarDeteccion(parseFloat(data[0].lon), parseFloat(data[0].lat));
-    } else {
-      const det = document.getElementById('addr-detected');
-      det.className = 'addr-detected notfound';
-      det.textContent = '⚠️ No se encontró — completá el territorio manualmente';
-      det.style.display = 'block';
-    }
-  } catch(e) {
-    const det = document.getElementById('addr-detected');
-    det.className = 'addr-detected notfound';
-    det.textContent = '⚠️ Sin conexión — completá el territorio manualmente';
-    det.style.display = 'block';
+    sug.style.display = 'none';
   }
 }
 
@@ -2280,15 +2263,12 @@ function selectSuggestion(i) {
   selectedStreet = item.street;
 
   if (item.num) {
-    // User typed street + number together → geocode immediately
-    const full = item.street + ' ' + item.num;
-    input.value = full;
+    input.value = item.street + ' ' + item.num;
     det.className = 'addr-detected';
     det.textContent = '📍 Buscando territorio...';
     det.style.display = 'block';
-    geocodificarYDetectar(full);
+    geocodificarYDetectar(input.value);
   } else {
-    // No number yet → fill street, wait for number
     input.value = item.street + ' ';
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
@@ -2299,7 +2279,25 @@ function selectSuggestion(i) {
 }
 
 async function geocodificarYDetectar(q) {
-  await buscarNominatim(q);
+  const det = document.getElementById('addr-detected');
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=uy&limit=1'
+      + '&q=' + encodeURIComponent(q + ', Montevideo, Uruguay')
+      + '&viewbox=-56.177,-34.867,-56.138,-34.907&bounded=0';
+    const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+    const data = await res.json();
+    if (data && data.length) {
+      aplicarDeteccion(parseFloat(data[0].lon), parseFloat(data[0].lat));
+    } else {
+      det.className = 'addr-detected notfound';
+      det.textContent = '⚠️ No encontrada — completá el territorio manualmente';
+      det.style.display = 'block';
+    }
+  } catch(e) {
+    det.className = 'addr-detected notfound';
+    det.textContent = '⚠️ Sin conexión — completá el territorio manualmente';
+    det.style.display = 'block';
+  }
 }
 
 function aplicarDeteccion(lng, lat) {
