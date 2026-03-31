@@ -1928,16 +1928,27 @@ function onDireccionInput() {
 async function buscarNominatim(q) {
   const sug = document.getElementById('addr-suggestions');
   try {
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&q='
-      + encodeURIComponent(q + ', Montevideo, Uruguay')
-      + '&limit=6&addressdetails=1&countrycodes=uy';
-    console.log('Fetching:', url);
-    const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-    console.log('Response status:', res.status);
-    const data = await res.json();
-    console.log('Results:', data.length);
+    // Also search without accents to handle "joan" → "joanicó"
+    const qNorm = q.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const base = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=uy&limit=6&viewbox=-56.177,-34.867,-56.138,-34.907&bounded=0';
 
-    if (!data || !data.length) {
+    const queries = [q + ', Montevideo, Uruguay'];
+    if (qNorm !== q) queries.push(qNorm + ', Montevideo, Uruguay');
+
+    const results = await Promise.all(queries.map(query =>
+      fetch(base + '&q=' + encodeURIComponent(query), { headers: { 'Accept-Language': 'es' } })
+        .then(r => r.json()).catch(() => [])
+    ));
+
+    // Merge and deduplicate
+    const seen = new Set();
+    const data = results.flat().filter(r => {
+      if (seen.has(r.place_id)) return false;
+      seen.add(r.place_id);
+      return true;
+    });
+
+    if (!data.length) {
       sug.innerHTML = '<div class="addr-suggestion-item" style="color:var(--text3)">Sin resultados</div>';
       return;
     }
