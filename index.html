@@ -595,7 +595,8 @@
 <nav class="nav-tabs">
   <div class="nav-tab active" onclick="showPage('registrar')">＋ Registrar</div>
   <div class="nav-tab" onclick="showPage('lista')">📋 Visitas</div>
-  <div class="nav-tab" onclick="showPage('horas')">⏱ Horas</div>
+  <div class="nav-tab" onclick="showPage('horas')">📅 Actividad</div>
+  <div class="nav-tab" onclick="showPage('estudiantes')">📖 Estudiantes</div>
   <div class="nav-tab" onclick="showPage('resumen')">📊 Resumen</div>
 </nav>
 
@@ -768,12 +769,12 @@
     </div>
   </div>
 
-  <!-- PAGE: HORAS -->
+  <!-- PAGE: HORAS / ACTIVIDAD -->
   <div id="page-horas" class="page hidden">
 
     <!-- Meta selector -->
     <div class="card">
-      <div class="card-title">⏱ Precursorado</div>
+      <div class="card-title">📅 Actividad</div>
       <div style="margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:8px">Meta mensual de horas</div>
         <div style="display:flex;gap:8px">
@@ -810,8 +811,6 @@
         <div id="cal-titulo" style="font-family:'DM Serif Display',serif;font-size:17px;text-transform:capitalize"></div>
         <button class="btn btn-secondary btn-sm" onclick="cambiarMes(1)">›</button>
       </div>
-
-      <!-- Day headers -->
       <div class="cal-grid cal-header">
         <div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div>
       </div>
@@ -820,13 +819,21 @@
 
   </div>
 
+  <!-- PAGE: ESTUDIANTES -->
+  <div id="page-estudiantes" class="page hidden">
+    <div class="section-header">
+      <h2 style="font-family:'DM Serif Display',serif;font-size:18px;font-weight:400">Estudiantes</h2>
+      <button class="btn btn-primary btn-sm" onclick="abrirNuevoEstudiante()">＋ Nuevo</button>
+    </div>
+    <div id="estudiantes-list"></div>
+  </div>
+
 </main>
 
-<!-- MODAL: Día de horas -->
+<!-- MODAL: Día de actividad -->
 <div class="modal-overlay" id="modal-dia">
   <div class="modal">
     <div class="modal-title" id="modal-dia-titulo">Día</div>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Registrá las horas de este día.</p>
     <div class="form-row">
       <div class="form-group">
         <label>Horas planificadas</label>
@@ -837,10 +844,87 @@
         <input type="number" inputmode="decimal" id="dia-real" min="0" max="24" step="0.5" placeholder="0">
       </div>
     </div>
+
+    <div class="divider"></div>
+
+    <!-- Estudios del día -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:8px">📖 Estudios bíblicos</div>
+      <div id="dia-estudios-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <button class="btn btn-secondary btn-sm" onclick="agregarEstudioDia()">＋ Agregar estudio</button>
+    </div>
+
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-dia')">Cancelar</button>
       <button class="btn btn-danger btn-sm" onclick="borrarDia()" style="margin-right:auto">🗑 Borrar</button>
       <button class="btn btn-primary" onclick="guardarDia()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Nuevo/Editar estudiante -->
+<div class="modal-overlay" id="modal-estudiante">
+  <div class="modal">
+    <div class="modal-title" id="modal-est-titulo">Nuevo estudiante</div>
+    <input type="hidden" id="est-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="est-nombre" placeholder="Nombre completo">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="tel" id="est-tel" placeholder="099 123 456">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Dirección</label>
+        <input type="text" id="est-dir" placeholder="Calle y número">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-estudiante')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEstudiante()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Sesión de estudio -->
+<div class="modal-overlay" id="modal-sesion">
+  <div class="modal">
+    <div class="modal-title">📝 Sesión de estudio</div>
+    <input type="hidden" id="ses-dia-key">
+    <input type="hidden" id="ses-idx">
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Estudiante</label>
+        <select id="ses-estudiante"></select>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Comentario / Material cubierto</label>
+        <textarea id="ses-comentario" placeholder="Ej: Cap. 3 del libro, tema: la oración..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-sesion')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarSesion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ficha estudiante -->
+<div class="modal-overlay" id="modal-ficha">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title" id="ficha-nombre-titulo"></div>
+    <div id="ficha-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px">Historial de sesiones</div>
+    <div id="ficha-historial" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-ficha')">Cerrar</button>
+      <button class="btn btn-primary btn-sm" onclick="editarEstudianteActivo()">✏️ Editar</button>
     </div>
   </div>
 </div>
@@ -1065,6 +1149,7 @@ function init() {
 
   currentUser = localStorage.getItem(USER_KEY) || '';
   loadHoras();
+  loadEstudiantes();
   if (!currentUser) openUserModal();
   else document.getElementById('user-label').textContent = currentUser;
 }
@@ -1079,15 +1164,16 @@ function save() {
 
 // ── PAGES ──────────────────────────────────────────────
 function showPage(page) {
-  ['registrar','lista','resumen','horas'].forEach(p => {
+  ['registrar','lista','horas','estudiantes','resumen'].forEach(p => {
     document.getElementById('page-' + p).classList.toggle('hidden', p !== page);
   });
   document.querySelectorAll('.nav-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['registrar','lista','horas','resumen'][i] === page);
+    t.classList.toggle('active', ['registrar','lista','horas','estudiantes','resumen'][i] === page);
   });
   if (page === 'lista') renderLista();
   if (page === 'resumen') renderResumen();
   if (page === 'horas') renderCalendario();
+  if (page === 'estudiantes') renderEstudiantes();
 }
 
 // ── FORM ──────────────────────────────────────────────
@@ -1746,9 +1832,11 @@ function renderCalendario() {
       hasReal ? 'has-real' : ''
     ].filter(Boolean).join(' ');
     const hrsLabel = hasReal ? `${info.real}h` : (hasPlan ? `${info.plan}h` : '');
+    const hasEstudios = info.estudios && info.estudios.length > 0;
     html += `<div class="${cls}" onclick="abrirDia('${key}', ${d})">
       <span class="cal-day-num">${d}</span>
       ${hrsLabel ? `<span class="cal-day-hrs">${hrsLabel}</span>` : ''}
+      ${hasEstudios ? `<span style="font-size:8px;color:var(--info)">📖${info.estudios.length}</span>` : ''}
     </div>`;
   }
   container.innerHTML = html;
@@ -1780,15 +1868,79 @@ function abrirDia(key, d) {
   document.getElementById('modal-dia-titulo').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
   document.getElementById('dia-plan').value = info.plan || '';
   document.getElementById('dia-real').value = info.real || '';
+  // Render studies
+  renderEstudiosDia(info.estudios || []);
   openModal('modal-dia');
+}
+
+function renderEstudiosDia(estudios) {
+  const container = document.getElementById('dia-estudios-list');
+  if (!estudios.length) { container.innerHTML = ''; return; }
+  container.innerHTML = estudios.map((e, i) => {
+    const est = estudiantes.find(x => x.id === e.estudianteId);
+    const nombre = est ? est.nombre : 'Estudiante eliminado';
+    return `<div style="background:var(--accent-light);border:1px solid #c2d0e0;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      <div>
+        <div style="font-weight:600;font-size:13px">👤 ${escHtml(nombre)}</div>
+        ${e.comentario ? `<div style="font-size:12px;color:var(--text2);margin-top:3px;font-style:italic">${escHtml(e.comentario)}</div>` : ''}
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="quitarEstudioDia(${i})" style="flex-shrink:0">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function agregarEstudioDia() {
+  // Populate student select
+  const sel = document.getElementById('ses-estudiante');
+  sel.innerHTML = estudiantes.length
+    ? estudiantes.map(e => `<option value="${e.id}">${escHtml(e.nombre)}</option>`).join('')
+    : '<option value="">— Sin estudiantes registrados —</option>';
+  document.getElementById('ses-comentario').value = '';
+  document.getElementById('ses-idx').value = '-1';
+  openModal('modal-sesion');
+}
+
+function quitarEstudioDia(idx) {
+  const mes = getMes();
+  const info = mes.dias[activeDia] || {};
+  if (!info.estudios) return;
+  info.estudios.splice(idx, 1);
+  saveHoras();
+  renderEstudiosDia(info.estudios);
+}
+
+function guardarSesion() {
+  const estId = document.getElementById('ses-estudiante').value;
+  const comentario = document.getElementById('ses-comentario').value.trim();
+  if (!estId) { alert('Seleccioná un estudiante'); return; }
+
+  const mes = getMes();
+  if (!mes.dias[activeDia]) mes.dias[activeDia] = { plan: 0, real: 0, estudios: [] };
+  if (!mes.dias[activeDia].estudios) mes.dias[activeDia].estudios = [];
+
+  const sesion = { estudianteId: estId, comentario, fecha: activeDia };
+  mes.dias[activeDia].estudios.push(sesion);
+  saveHoras();
+
+  // Also add to student history
+  const est = estudiantes.find(x => x.id === estId);
+  if (est) {
+    if (!est.sesiones) est.sesiones = [];
+    est.sesiones.push({ fecha: activeDia, comentario });
+    saveEstudiantes();
+  }
+
+  closeModal('modal-sesion');
+  renderEstudiosDia(mes.dias[activeDia].estudios);
 }
 
 function guardarDia() {
   const mes = getMes();
   const plan = parseFloat(document.getElementById('dia-plan').value) || 0;
   const real = parseFloat(document.getElementById('dia-real').value) || 0;
-  if (plan > 0 || real > 0) {
-    mes.dias[activeDia] = { plan, real };
+  const existing = mes.dias[activeDia] || {};
+  if (plan > 0 || real > 0 || (existing.estudios && existing.estudios.length)) {
+    mes.dias[activeDia] = { ...existing, plan, real };
   } else {
     delete mes.dias[activeDia];
   }
@@ -1803,6 +1955,106 @@ function borrarDia() {
   saveHoras();
   closeModal('modal-dia');
   renderCalendario();
+}
+
+// ── ESTUDIANTES ──────────────────────────────────────────
+const EST_KEY = 'ministeriapp_estudiantes';
+let estudiantes = [];
+let activeEstId = null;
+
+function loadEstudiantes() {
+  const raw = localStorage.getItem(EST_KEY);
+  if (raw) estudiantes = JSON.parse(raw);
+}
+function saveEstudiantes() {
+  localStorage.setItem(EST_KEY, JSON.stringify(estudiantes));
+}
+
+function renderEstudiantes() {
+  const container = document.getElementById('estudiantes-list');
+  if (!estudiantes.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📖</div><p>No hay estudiantes registrados.<br>Tocá ＋ Nuevo para agregar uno.</p></div>`;
+    return;
+  }
+  container.innerHTML = estudiantes.map(e => {
+    const sesiones = e.sesiones ? e.sesiones.length : 0;
+    const ultima = e.sesiones && e.sesiones.length ? e.sesiones[e.sesiones.length-1].fecha : null;
+    return `<div class="card" style="cursor:pointer;margin-bottom:12px" onclick="abrirFicha('${e.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:15px">👤 ${escHtml(e.nombre)}</div>
+          ${e.tel ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">📱 ${escHtml(e.tel)}</div>` : ''}
+          ${e.dir ? `<div style="font-size:12px;color:var(--text2)">📍 ${escHtml(e.dir)}</div>` : ''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent)">${sesiones}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">sesion${sesiones!==1?'es':''}</div>
+          ${ultima ? `<div style="font-size:11px;color:var(--text3);margin-top:2px">${formatDate(ultima)}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirNuevoEstudiante() {
+  document.getElementById('est-id').value = '';
+  document.getElementById('est-nombre').value = '';
+  document.getElementById('est-tel').value = '';
+  document.getElementById('est-dir').value = '';
+  document.getElementById('modal-est-titulo').textContent = 'Nuevo estudiante';
+  openModal('modal-estudiante');
+}
+
+function guardarEstudiante() {
+  const nombre = document.getElementById('est-nombre').value.trim();
+  if (!nombre) { alert('El nombre es obligatorio'); return; }
+  const id = document.getElementById('est-id').value;
+  const tel = document.getElementById('est-tel').value.trim();
+  const dir = document.getElementById('est-dir').value.trim();
+
+  if (id) {
+    const est = estudiantes.find(e => e.id === id);
+    if (est) { est.nombre = nombre; est.tel = tel; est.dir = dir; }
+  } else {
+    estudiantes.push({ id: Date.now().toString(), nombre, tel, dir, sesiones: [], creadoEn: new Date().toISOString() });
+  }
+  saveEstudiantes();
+  closeModal('modal-estudiante');
+  renderEstudiantes();
+  showToast('✓ Estudiante guardado');
+}
+
+function abrirFicha(id) {
+  activeEstId = id;
+  const est = estudiantes.find(e => e.id === id);
+  if (!est) return;
+  document.getElementById('ficha-nombre-titulo').textContent = est.nombre;
+  const info = [est.tel ? '📱 ' + est.tel : '', est.dir ? '📍 ' + est.dir : ''].filter(Boolean).join(' · ');
+  document.getElementById('ficha-info').textContent = info;
+  const ses = est.sesiones || [];
+  if (!ses.length) {
+    document.getElementById('ficha-historial').innerHTML = '<p style="color:var(--text3);font-size:13px">Sin sesiones registradas aún.</p>';
+  } else {
+    document.getElementById('ficha-historial').innerHTML = [...ses].reverse().map(s =>
+      `<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">📅 ${formatDate(s.fecha)}</div>
+        ${s.comentario ? `<div style="font-size:13px;margin-top:4px">${escHtml(s.comentario)}</div>` : '<div style="font-size:12px;color:var(--text3);font-style:italic">Sin comentario</div>'}
+      </div>`
+    ).join('');
+  }
+  openModal('modal-ficha');
+}
+
+function editarEstudianteActivo() {
+  const est = estudiantes.find(e => e.id === activeEstId);
+  if (!est) return;
+  closeModal('modal-ficha');
+  document.getElementById('est-id').value = est.id;
+  document.getElementById('est-nombre').value = est.nombre;
+  document.getElementById('est-tel').value = est.tel || '';
+  document.getElementById('est-dir').value = est.dir || '';
+  document.getElementById('modal-est-titulo').textContent = 'Editar estudiante';
+  openModal('modal-estudiante');
 }
 
 
