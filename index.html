@@ -408,7 +408,25 @@
 
   select[data-auto="1"] { background: var(--accent-light); color: var(--accent); font-weight: 600; border-color: #c2d0e0; }
 
-  /* AUTOCOMPLETE */
+  /* ALERTAS IN-APP */
+  .alerta {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    border: 1px solid;
+    cursor: pointer;
+  }
+  .alerta-revisita { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .alerta-proxima  { background: #fefce8; border-color: #fde68a; color: #92400e; }
+  .alerta-informe  { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+  .alerta-close { margin-left:auto; opacity:.5; font-size:15px; line-height:1; flex-shrink:0; }
+
+
   .autocomplete-wrap { position: relative; }
   .addr-suggestions {
     position: absolute; top: 100%; left: 0; right: 0;
@@ -607,6 +625,9 @@
   <div class="nav-tab" data-page="resumen" onclick="showPage('resumen')"><span style="font-size:18px">📊</span>Resumen</div>
 </nav>
 
+<!-- ALERTAS IN-APP -->
+<div id="alertas-wrap" style="display:none;padding:8px 14px 0"></div>
+
 <main class="main">
 
   <!-- PAGE: LISTA (includes registrar form) -->
@@ -762,6 +783,15 @@
     <div class="card">
       <div class="card-title">Visitas por Territorio</div>
       <div id="by-territorio"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔔 Notificaciones</div>
+      <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:14px">Activá los recordatorios para revisitas programadas, próximas visitas y el informe de fin de mes.</p>
+      <button class="btn btn-primary" onclick="activarNotificaciones()" id="btn-notif">
+        🔔 Activar notificaciones
+      </button>
+      <p id="notif-estado" style="margin-top:10px;font-size:12px;color:var(--text3)"></p>
     </div>
 
     <div class="card">
@@ -1223,6 +1253,82 @@ function showPage(page) {
   if (page === 'resumen') renderResumen();
   if (page === 'horas') renderCalendario();
   if (page === 'estudiantes') renderEstudiantes();
+}
+
+function checkAlertas() {
+  const wrap = document.getElementById('alertas-wrap');
+  const alertas = [];
+  const hoy = today();
+  const now = new Date();
+
+  // 1. Revisitas pendientes hace más de 7 días
+  const misVisitas = visitas.filter(v => !currentUser || v.usuario === currentUser);
+  const revisitasPendientes = misVisitas.filter(v => v.estado === 'revisita');
+  const viejas = revisitasPendientes.filter(v => {
+    if (!v.fecha) return false;
+    const diff = (new Date(hoy) - new Date(v.fecha)) / (1000 * 60 * 60 * 24);
+    return diff >= 7;
+  });
+  if (viejas.length > 0) {
+    alertas.push({
+      tipo: 'revisita',
+      icono: '👋',
+      texto: `Tenés ${viejas.length} revisita${viejas.length > 1 ? 's' : ''} pendiente${viejas.length > 1 ? 's' : ''} sin atender hace más de una semana.`,
+      accion: () => { showPage('lista'); document.getElementById('fil-estado').value = 'revisita'; renderLista(); }
+    });
+  }
+
+  // 2. Próximas visitas para hoy
+  const proximasHoy = misVisitas.filter(v => v.proximaVisita === hoy);
+  if (proximasHoy.length > 0) {
+    alertas.push({
+      tipo: 'proxima',
+      icono: '📅',
+      texto: `Hoy tenés ${proximasHoy.length} visita${proximasHoy.length > 1 ? 's' : ''} programada${proximasHoy.length > 1 ? 's' : ''}.`,
+      accion: () => { showPage('lista'); }
+    });
+  }
+
+  // 3. Último día del mes → recordatorio de informe
+  const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  if (now.getDate() >= ultimoDia - 1) {
+    const mesKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const mes = horasData[mesKey] || { dias: {} };
+    const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
+    if (totalReal > 0) {
+      alertas.push({
+        tipo: 'informe',
+        icono: '📤',
+        texto: `Fin de mes — recordá enviar tu informe de actividad.`,
+        accion: () => { showPage('horas'); }
+      });
+    }
+  }
+
+  if (alertas.length === 0) { wrap.style.display = 'none'; return; }
+
+  wrap.style.display = 'block';
+  wrap.innerHTML = alertas.map((a, i) => `
+    <div class="alerta alerta-${a.tipo}" onclick="alertaAccion(${i})">
+      <span>${a.icono}</span>
+      <span style="flex:1">${a.texto}</span>
+      <span class="alerta-close" onclick="event.stopPropagation();cerrarAlerta(this)">✕</span>
+    </div>
+  `).join('');
+
+  // Store actions
+  wrap._alertaAcciones = alertas.map(a => a.accion);
+}
+
+function alertaAccion(i) {
+  const wrap = document.getElementById('alertas-wrap');
+  if (wrap._alertaAcciones && wrap._alertaAcciones[i]) wrap._alertaAcciones[i]();
+}
+
+function cerrarAlerta(btn) {
+  btn.closest('.alerta').remove();
+  const wrap = document.getElementById('alertas-wrap');
+  if (!wrap.querySelector('.alerta')) wrap.style.display = 'none';
 }
 
 function toggleCamposExtra() {
@@ -2430,6 +2536,7 @@ document.addEventListener('click', e => {
 document.addEventListener('DOMContentLoaded', function() {
   init();
   showPage('horas');
+  checkAlertas();
 });
 
 // ── SERVICE WORKER ──────────────────────────────────────
@@ -2438,6 +2545,106 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
+
+// ── NOTIFICACIONES LOCALES ───────────────────────────────
+async function pedirPermisoNotificaciones() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+function mostrarNotificacion(titulo, cuerpo, tag) {
+  if (Notification.permission !== 'granted') return;
+  navigator.serviceWorker.ready.then(sw => {
+    sw.showNotification(titulo, {
+      body: cuerpo,
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      tag: tag,
+      renotify: false
+    });
+  }).catch(() => {
+    new Notification(titulo, { body: cuerpo, icon: './icon-192.png' });
+  });
+}
+
+function verificarNotificaciones() {
+  if (Notification.permission !== 'granted') return;
+  const hoy = today();
+  const now = new Date();
+
+  // 1. Revisitas pendientes (con próxima visita = hoy o anterior)
+  const misVisitas = visitas.filter(v => !currentUser || v.usuario === currentUser);
+  const revisitasVencidas = misVisitas.filter(v =>
+    v.estado === 'revisita' && v.proximaVisita && v.proximaVisita <= hoy
+  );
+  if (revisitasVencidas.length > 0) {
+    mostrarNotificacion(
+      '👋 Revisitas pendientes',
+      `Tenés ${revisitasVencidas.length} revisita${revisitasVencidas.length > 1 ? 's' : ''} programada${revisitasVencidas.length > 1 ? 's' : ''} para hoy o días anteriores.`,
+      'revisitas-pendientes'
+    );
+  }
+
+  // 2. Próxima visita hoy
+  const visitasHoy = misVisitas.filter(v =>
+    v.estado === 'revisita' && v.proximaVisita === hoy
+  );
+  if (visitasHoy.length > 0) {
+    const nombres = visitasHoy.map(v => v.nombre || v.direccion).join(', ');
+    mostrarNotificacion(
+      '📅 Visita programada para hoy',
+      nombres,
+      'visita-hoy'
+    );
+  }
+
+  // 3. Último día del mes → recordatorio de informe
+  const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  if (now.getDate() === ultimoDia) {
+    mostrarNotificacion(
+      '📋 Fin de mes',
+      '¡Acordate de enviar el informe de actividad del mes!',
+      'informe-mes'
+    );
+  }
+}
+
+async function activarNotificaciones() {
+  const ok = await pedirPermisoNotificaciones();
+  if (ok) {
+    localStorage.setItem('notif_activas', '1');
+    showToast('🔔 Notificaciones activadas');
+    verificarNotificaciones();
+  } else {
+    showToast('⚠️ Permiso denegado — revisá la configuración del navegador');
+  }
+}
+
+// Verificar al cargar si ya tienen permiso
+window.addEventListener('load', () => {
+  if (Notification.permission === 'granted') {
+    setTimeout(verificarNotificaciones, 2000);
+  }
+  // Update button state
+  const btn = document.getElementById('btn-notif');
+  const estado = document.getElementById('notif-estado');
+  if (btn && estado) {
+    if (!('Notification' in window)) {
+      btn.disabled = true;
+      estado.textContent = 'Tu navegador no soporta notificaciones.';
+    } else if (Notification.permission === 'granted') {
+      btn.textContent = '✅ Notificaciones activas';
+      btn.classList.replace('btn-primary', 'btn-secondary');
+      estado.textContent = 'Se verifican al abrir la app.';
+    } else if (Notification.permission === 'denied') {
+      btn.disabled = true;
+      estado.textContent = 'Permiso denegado — habilitalo desde la configuración del navegador.';
+    }
+  }
+});
 </script>
 </body>
 </html>
