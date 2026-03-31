@@ -487,13 +487,13 @@
   .cal-day:hover { border-color: var(--accent); }
   .cal-day.empty { background: transparent; cursor: default; pointer-events: none; }
   .cal-day.today { border-color: var(--accent2); }
-  .cal-day.has-plan { background: var(--info-light); border-color: var(--info); }
-  .cal-day.has-real { background: var(--accent-light); border-color: var(--accent); }
-  .cal-day.has-real.has-plan { background: var(--accent-light); border-color: var(--accent); }
+  .cal-day.has-plan { background: #dbeafe; border-color: #3b82f6; }
+  .cal-day.has-real { background: #dcfce7; border-color: #16a34a; }
+  .cal-day.has-real.has-plan { background: #dcfce7; border-color: #16a34a; }
   .cal-day-num { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1; }
   .cal-day.today .cal-day-num { color: var(--accent2); }
-  .cal-day-hrs { font-size: 10px; font-weight: 700; color: var(--accent); line-height: 1; }
-  .cal-day.has-plan:not(.has-real) .cal-day-hrs { color: var(--info); }
+  .cal-day-hrs { font-size: 10px; font-weight: 700; color: #16a34a; line-height: 1; }
+  .cal-day.has-plan:not(.has-real) .cal-day-hrs { color: #3b82f6; }
 
 
   .share-bar {
@@ -598,8 +598,8 @@
 </header>
 
 <nav class="nav-tabs">
-  <div class="nav-tab active" data-page="lista" onclick="showPage('lista')">📋 Visitas</div>
-  <div class="nav-tab" data-page="horas" onclick="showPage('horas')">⏱ Actividad</div>
+  <div class="nav-tab active" data-page="horas" onclick="showPage('horas')">⏱ Actividad</div>
+  <div class="nav-tab" data-page="lista" onclick="showPage('lista')">📋 Visitas</div>
   <div class="nav-tab" data-page="estudiantes" onclick="showPage('estudiantes')">📖 Estudios</div>
   <div class="nav-tab" data-page="resumen" onclick="showPage('resumen')">📊 Resumen</div>
 </nav>
@@ -757,7 +757,7 @@
     <div class="stats-grid" id="stats-grid"></div>
 
     <div class="card">
-      <div class="card-title">Por territorio</div>
+      <div class="card-title">Visitas por Territorio</div>
       <div id="by-territorio"></div>
     </div>
 
@@ -823,6 +823,16 @@
         <div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div>
       </div>
       <div class="cal-grid" id="cal-days"></div>
+      <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text2)">
+        <div style="display:flex;align-items:center;gap:5px">
+          <div style="width:12px;height:12px;border-radius:3px;background:#dbeafe;border:1.5px solid #3b82f6"></div>
+          Planificado
+        </div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <div style="width:12px;height:12px;border-radius:3px;background:#dcfce7;border:1.5px solid #16a34a"></div>
+          Real
+        </div>
+      </div>
     </div>
 
     <!-- Enviar informe -->
@@ -1527,8 +1537,7 @@ document.getElementById('visit-list').addEventListener('click', function(e) {
 // ── RESUMEN ──────────────────────────────────────────────
 function renderResumen() {
   const mis = visitas.filter(v => !currentUser || v.usuario === currentUser);
-  const nc = mis.filter(v => v.estado === 'nc').length;
-  const carta = mis.filter(v => v.estado === 'carta').length;
+  const nc = mis.filter(v => v.estado === 'nc' || v.estado === 'carta').length;
   const rev = mis.filter(v => v.estado === 'revisita').length;
 
   // Horas del mes actual
@@ -1546,8 +1555,7 @@ function renderResumen() {
 
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card"><div class="stat-number">${nc}</div><div class="stat-label">No en casa</div></div>
-    <div class="stat-card"><div class="stat-number">${carta}</div><div class="stat-label">Cartas dejadas</div></div>
-    <div class="stat-card"><div class="stat-number">${rev}</div><div class="stat-label">Revisitas pendientes</div></div>
+    <div class="stat-card"><div class="stat-number">${rev}</div><div class="stat-label">Revisitas</div></div>
     <div class="stat-card"><div class="stat-number">${horasLabel}</div><div class="stat-label">Horas del mes</div></div>
     <div class="stat-card"><div class="stat-number">${estActivos.size}</div><div class="stat-label">Estudios activos</div></div>
   `;
@@ -2407,7 +2415,7 @@ document.addEventListener('click', e => {
 // ── START ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   init();
-  showPage('lista');
+  showPage('horas');
 });
 
 // ── SERVICE WORKER ──────────────────────────────────────
