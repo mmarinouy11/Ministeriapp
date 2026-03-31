@@ -1904,17 +1904,17 @@ async function buscarNominatim(q) {
     }
 
     addrSuggestionsData = data.map(r => ({
-      street: r.address.road || r.address.pedestrian || r.display_name.split(',')[0],
+      street: r.address.road || r.address.pedestrian || r.address.suburb || (r.display_name || '').split(',')[0],
       num:    r.address.house_number || '',
       lng:    parseFloat(r.lon),
       lat:    parseFloat(r.lat),
-      display: r.display_name
+      display: r.display_name || ''
     }));
 
     sug.innerHTML = addrSuggestionsData.map((r, i) =>
       `<div class="addr-suggestion-item" onclick="selectSuggestion(${i})">
         <strong>${r.street}${r.num ? ' ' + r.num : ''}</strong><br>
-        <small style="color:var(--text3)">${r.display_name.split(',').slice(1,3).join(',').trim()}</small>
+        <small style="color:var(--text3)">${(r.display || '').split(',').slice(1,3).join(',').trim()}</small>
       </div>`
     ).join('');
   } catch(e) {
