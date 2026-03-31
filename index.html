@@ -84,21 +84,20 @@
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     display: flex;
-    overflow-x: auto;
-    padding: 0 16px;
+    padding: 0 8px;
     gap: 0;
-    scrollbar-width: none;
   }
-  .nav-tabs::-webkit-scrollbar { display: none; }
   .nav-tab {
-    padding: 14px 18px;
-    font-size: 13px;
+    padding: 12px 10px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text2);
     border-bottom: 2px solid transparent;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s;
+    flex: 1;
+    text-align: center;
   }
   .nav-tab.active {
     color: var(--accent);
@@ -595,7 +594,7 @@
 <nav class="nav-tabs">
   <div class="nav-tab active" onclick="showPage('lista')">📋 Visitas</div>
   <div class="nav-tab" onclick="showPage('horas')">📅 Actividad</div>
-  <div class="nav-tab" onclick="showPage('estudiantes')">📖 Estudiantes</div>
+  <div class="nav-tab" onclick="showPage('estudiantes')">📖 Estudios</div>
   <div class="nav-tab" onclick="showPage('resumen')">📊 Resumen</div>
 </nav>
 
