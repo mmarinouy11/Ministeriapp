@@ -1527,6 +1527,27 @@ function toggleMapaVisitas() {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap', maxZoom: 19
       }).addTo(mapaVisitas);
+
+      // Draw territory polygons
+      const zonaColors = { A: '#7c3aed', B: '#1d4ed8', C: '#b45309', D: '#15803d' };
+      L.geoJSON(TERRITORIOS_GEO, {
+        style: f => ({
+          color: zonaColors[f.properties.zona] || '#888',
+          fillColor: zonaColors[f.properties.zona] || '#888',
+          fillOpacity: 0.08,
+          weight: 1.5,
+          opacity: 0.5
+        }),
+        onEachFeature: (f, layer) => {
+          const c = layer.getBounds().getCenter();
+          L.marker(c, {
+            icon: L.divIcon({
+              html: `<div style="font-size:9px;font-weight:700;color:${zonaColors[f.properties.zona]};opacity:0.8;white-space:nowrap">${f.properties.territorio}</div>`,
+              className: '', iconAnchor: [6, 6]
+            })
+          }).addTo(mapaVisitas);
+        }
+      }).addTo(mapaVisitas);
     }
     setTimeout(() => {
       mapaVisitas.invalidateSize();
