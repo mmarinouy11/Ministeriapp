@@ -1534,18 +1534,20 @@ function toggleMapaVisitas() {
         style: f => ({
           color: zonaColors[f.properties.zona] || '#888',
           fillColor: zonaColors[f.properties.zona] || '#888',
-          fillOpacity: 0.08,
-          weight: 1.5,
-          opacity: 0.5
+          fillOpacity: 0.15,
+          weight: 2,
+          opacity: 0.8
         }),
         onEachFeature: (f, layer) => {
           const c = layer.getBounds().getCenter();
           L.marker(c, {
             icon: L.divIcon({
-              html: `<div style="font-size:9px;font-weight:700;color:${zonaColors[f.properties.zona]};opacity:0.8;white-space:nowrap">${f.properties.territorio}</div>`,
-              className: '', iconAnchor: [6, 6]
+              html: `<div style="background:rgba(255,255,255,0.85);border-radius:4px;padding:1px 4px;font-size:10px;font-weight:800;color:${zonaColors[f.properties.zona]};border:1px solid ${zonaColors[f.properties.zona]};white-space:nowrap;line-height:1.4">${f.properties.territorio}</div>`,
+              className: '',
+              iconAnchor: [10, 8]
             })
           }).addTo(mapaVisitas);
+          layer.bindTooltip('T-' + f.properties.territorio + ' (' + f.properties.zona + ')', { permanent: false });
         }
       }).addTo(mapaVisitas);
     }
