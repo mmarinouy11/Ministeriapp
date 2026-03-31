@@ -81,21 +81,21 @@
 
   /* NAV TABS — bottom bar */
   .nav-tabs {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
+    background: var(--accent);
+    border-top: none;
     display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
     z-index: 99;
-    box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
+    box-shadow: 0 -2px 16px rgba(45,84,144,0.25);
     padding: 0;
     gap: 0;
   }
   .nav-tab {
-    padding: 10px 4px 12px;
+    padding: 10px 4px 14px;
     font-size: 11px;
     font-weight: 500;
-    color: var(--text2);
+    color: rgba(255,255,255,0.6);
     border-top: 2px solid transparent;
     cursor: pointer;
     white-space: nowrap;
@@ -109,10 +109,11 @@
     gap: 2px;
   }
   .nav-tab.active {
-    color: var(--accent);
-    border-top-color: var(--accent);
+    color: white;
+    border-top-color: white;
+    font-weight: 700;
   }
-  .nav-tab:hover:not(.active) { color: var(--text); }
+  .nav-tab:hover:not(.active) { color: rgba(255,255,255,0.85); }
 
   /* Add bottom padding to main so content isn't hidden behind nav */
   .main { padding: 20px 16px 80px; max-width: 720px; margin: 0 auto; }
