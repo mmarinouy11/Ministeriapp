@@ -116,22 +116,22 @@
   .nav-tab:hover:not(.active) { color: rgba(255,255,255,0.85); }
 
   /* Add bottom padding to main so content isn't hidden behind nav */
-  .main { padding: 20px 16px 80px; max-width: 720px; margin: 0 auto; }
+  .main { padding: 12px 14px 80px; max-width: 720px; margin: 0 auto; }
 
   /* CARDS */
   .card {
     background: var(--surface);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 14px 16px;
     box-shadow: var(--shadow);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     border: 1px solid var(--border);
   }
   .card-title {
     font-family: 'DM Serif Display', serif;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 400;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     color: var(--text);
   }
   .card-subtitle {
@@ -460,22 +460,22 @@
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: 3px;
   }
   .cal-header {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
   .cal-header div {
     text-align: center;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     color: var(--text3);
     text-transform: uppercase;
-    padding: 4px 0;
+    padding: 2px 0;
   }
   .cal-day {
     aspect-ratio: 1;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -790,8 +790,8 @@
     <!-- Meta selector -->
     <div class="card">
       <div class="card-title">📅 Actividad</div>
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:8px">Meta mensual de horas</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:6px">Meta mensual de horas</div>
         <div style="display:flex;gap:8px">
           <button class="meta-btn" data-meta="15" onclick="setMeta(15)">15 hs</button>
           <button class="meta-btn" data-meta="30" onclick="setMeta(30)">30 hs</button>
@@ -801,27 +801,27 @@
 
       <!-- Progress bar -->
       <div id="horas-progress-wrap" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-          <span style="font-size:13px;font-weight:600;color:var(--text2)">Progreso real</span>
-          <span id="horas-real-label" style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent)">0 hs</span>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">Progreso real</span>
+          <span id="horas-real-label" style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent)">0 hs</span>
         </div>
-        <div style="background:var(--border);border-radius:100px;height:10px;overflow:hidden;margin-bottom:4px">
+        <div style="background:var(--border);border-radius:100px;height:8px;overflow:hidden;margin-bottom:3px">
           <div id="horas-bar-real" style="height:100%;background:var(--accent);border-radius:100px;width:0%;transition:width .4s"></div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;margin-top:12px">
-          <span style="font-size:13px;font-weight:600;color:var(--text2)">Planificado</span>
-          <span id="horas-plan-label" style="font-size:14px;color:var(--info)">0 hs</span>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;margin-top:8px">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">Planificado</span>
+          <span id="horas-plan-label" style="font-size:12px;color:var(--info)">0 hs</span>
         </div>
-        <div style="background:var(--border);border-radius:100px;height:6px;overflow:hidden">
+        <div style="background:var(--border);border-radius:100px;height:5px;overflow:hidden">
           <div id="horas-bar-plan" style="height:100%;background:var(--info);border-radius:100px;width:0%;transition:width .4s;opacity:0.5"></div>
         </div>
-        <div id="horas-meta-label" style="text-align:right;font-size:11px;color:var(--text3);margin-top:4px">Meta: 0 hs</div>
+        <div id="horas-meta-label" style="text-align:right;font-size:10px;color:var(--text3);margin-top:3px">Meta: 0 hs</div>
       </div>
     </div>
 
     <!-- Month selector + calendar -->
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <button class="btn btn-secondary btn-sm" onclick="cambiarMes(-1)">‹</button>
         <div id="cal-titulo" style="font-family:'DM Serif Display',serif;font-size:17px;text-transform:capitalize"></div>
         <button class="btn btn-secondary btn-sm" onclick="cambiarMes(1)">›</button>
