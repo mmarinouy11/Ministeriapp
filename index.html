@@ -427,6 +427,17 @@
   .alerta-close { margin-left:auto; opacity:.5; font-size:15px; line-height:1; flex-shrink:0; }
 
 
+  .terr-label-campana {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(0,0,0,0.65);
+    padding: 0 !important;
+  }
+  .terr-label-campana::before { display: none !important; }
+
   .autocomplete-wrap { position: relative; }
   .addr-suggestions {
     position: absolute; top: 100%; left: 0; right: 0;
@@ -880,6 +891,23 @@
   </div>
 
 </main>
+
+<!-- MODAL: Campaña -->
+<div class="modal-overlay" id="modal-campana" style="z-index:200">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="modal-title" style="margin-bottom:0" id="campana-titulo">📣 Campaña</div>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-campana')">Cerrar</button>
+    </div>
+    <div id="campana-contador" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+    <div style="display:flex;gap:12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#16a34a;display:inline-block"></span>Completo</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block"></span>En progreso</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#e5e7eb;border:1px solid #d1d5db;display:inline-block"></span>Pendiente</span>
+    </div>
+    <div id="mapa-campana" style="height:380px;border-radius:10px;overflow:hidden;border:1px solid var(--border)"></div>
+  </div>
+</div>
 
 <!-- MODAL: Día de actividad -->
 <div class="modal-overlay" id="modal-dia">
@@ -2568,9 +2596,72 @@ document.addEventListener('DOMContentLoaded', function() {
   init();
   showPage('horas');
   checkAlertas();
+  setTimeout(cargarCampana, 1000);
 });
 
 // ── SERVICE WORKER ──────────────────────────────────────
+
+// ── CAMPAÑA ──────────────────────────────────────────────
+const CAMPANA_CSV = 'https://corsproxy.io/?' + encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vSeYCIC8_Ar9VohJ5XsuyAvzMaWn4vBME0TbsqFliDQPYt5LuoTqh1mtV2HRYDXyTtqDF7RM6a5E6GY/pub?output=csv');
+let mapaCampana = null;
+
+async function cargarCampana() {
+  try {
+    const res = await fetch(CAMPANA_CSV);
+    const text = await res.text();
+    const lines = text.trim().split('\n').slice(1);
+    const estados = {};
+    lines.forEach(line => {
+      const [terr, estado] = line.split(',').map(s => s.trim().replace(/"/g,''));
+      if (terr) estados[terr] = (estado || 'pendiente').toLowerCase();
+    });
+
+    const hayActiva = Object.values(estados).some(e => e !== 'pendiente');
+    if (!hayActiva) return;
+
+    const total = Object.keys(estados).length;
+    const completos = Object.values(estados).filter(e => e === 'completo').length;
+    const enProgreso = Object.values(estados).filter(e => e === 'en_progreso').length;
+
+    const pct = Math.round(completos / total * 100);
+    document.getElementById('campana-titulo').textContent = '📣 Avance de campaña';
+    document.getElementById('campana-contador').textContent =
+      `${completos} de ${total} territorios completos · ${enProgreso} en progreso · ${pct}% completado`;
+
+    openModal('modal-campana');
+    setTimeout(() => iniciarMapaCampana(estados), 200);
+  } catch(e) { /* sin conexión, no mostrar */ }
+}
+
+function iniciarMapaCampana(estados) {
+  const el = document.getElementById('mapa-campana');
+  if (!el) return;
+  if (mapaCampana) { mapaCampana.remove(); mapaCampana = null; }
+
+  mapaCampana = L.map('mapa-campana', { zoomControl: true, attributionControl: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapaCampana);
+
+  const colors = { completo: '#16a34a', en_progreso: '#f59e0b', pendiente: '#e5e7eb' };
+  const borders = { completo: '#15803d', en_progreso: '#d97706', pendiente: '#d1d5db' };
+  const allBounds = [];
+
+  TERRITORIOS_GEO.features.forEach(feat => {
+    const t = String(feat.properties.territorio || feat.properties.TERRITORIO || '');
+    const est = estados[t] || 'pendiente';
+    L.geoJSON(feat, {
+      style: { fillColor: colors[est], fillOpacity: 0.7, color: borders[est], weight: 1.5 }
+    })
+    .bindTooltip(`${t}`, { permanent: true, direction: 'center', className: 'terr-label-campana' })
+    .addTo(mapaCampana)
+    .eachLayer(l => allBounds.push(l.getBounds()));
+  });
+
+  if (allBounds.length) {
+    const combined = allBounds.reduce((b, cur) => b.extend(cur), allBounds[0]);
+    mapaCampana.fitBounds(combined, { padding: [4, 4] });
+  }
+}
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
