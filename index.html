@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Ministeriapp - Blanqueada</title>
+<title>Ministeriapp</title>
 <meta name="description" content="Seguimiento de visitas de predicación por territorio">
 <meta name="theme-color" content="#3b6ba5">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -584,7 +584,7 @@
 
 <header class="app-header">
   <div>
-    <h1>📖 Ministeriapp - Blanqueada</h1>
+    <h1>📖 Ministeriapp</h1>
   </div>
   <div class="header-right">
     <span id="user-label">Hermano/a</span>
@@ -593,8 +593,7 @@
 </header>
 
 <nav class="nav-tabs">
-  <div class="nav-tab active" onclick="showPage('registrar')">＋ Registrar</div>
-  <div class="nav-tab" onclick="showPage('lista')">📋 Visitas</div>
+  <div class="nav-tab active" onclick="showPage('lista')">📋 Visitas</div>
   <div class="nav-tab" onclick="showPage('horas')">📅 Actividad</div>
   <div class="nav-tab" onclick="showPage('estudiantes')">📖 Estudiantes</div>
   <div class="nav-tab" onclick="showPage('resumen')">📊 Resumen</div>
@@ -602,10 +601,16 @@
 
 <main class="main">
 
-  <!-- PAGE: REGISTRAR -->
-  <div id="page-registrar" class="page">
-    <div class="card">
-      <div class="card-title">Registrar visita</div>
+  <!-- PAGE: LISTA (includes registrar form) -->
+  <div id="page-lista" class="page">
+
+    <!-- Registrar colapsable -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleRegistrarForm()">
+        <div style="font-family:'DM Serif Display',serif;font-size:16px;font-weight:400">＋ Registrar visita</div>
+        <span id="registrar-toggle-icon" style="font-size:18px;color:var(--text3)">›</span>
+      </div>
+      <div id="registrar-form-body" style="display:none;margin-top:14px">
 
       <div class="form-row" style="grid-template-columns:1fr 90px">
         <div class="form-group">
@@ -683,11 +688,8 @@
         <button class="btn btn-primary" onclick="registrarVisita()">Guardar visita</button>
         <button class="btn btn-secondary" onclick="limpiarForm()">Limpiar</button>
       </div>
-    </div>
-  </div>
-
-  <!-- PAGE: LISTA -->
-  <div id="page-lista" class="page hidden">
+      </div><!-- end registrar-form-body -->
+    </div><!-- end registrar card -->
 
     <div class="filter-bar">
       <div class="form-group">
@@ -720,7 +722,7 @@
       <h2>Mis visitas</h2>
       <div style="display:flex;gap:8px;align-items:center">
         <span class="count-pill" id="count-pill">0</span>
-        <button class="btn btn-secondary sel-toggle-btn" id="btn-map-toggle" onclick="toggleMapaVisitas()">🗺</button>
+        <button class="btn btn-secondary sel-toggle-btn" id="btn-map-toggle" onclick="toggleMapaVisitas()">🗺 Mapa</button>
         <button class="btn btn-secondary sel-toggle-btn" id="btn-sel-toggle" onclick="toggleSelMode()">☑ Seleccionar</button>
       </div>
     </div>
@@ -1164,16 +1166,29 @@ function save() {
 
 // ── PAGES ──────────────────────────────────────────────
 function showPage(page) {
-  ['registrar','lista','horas','estudiantes','resumen'].forEach(p => {
+  ['lista','horas','estudiantes','resumen'].forEach(p => {
     document.getElementById('page-' + p).classList.toggle('hidden', p !== page);
   });
   document.querySelectorAll('.nav-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['registrar','lista','horas','estudiantes','resumen'][i] === page);
+    t.classList.toggle('active', ['lista','horas','estudiantes','resumen'][i] === page);
   });
   if (page === 'lista') renderLista();
   if (page === 'resumen') renderResumen();
   if (page === 'horas') renderCalendario();
   if (page === 'estudiantes') renderEstudiantes();
+}
+
+function toggleRegistrarForm() {
+  const body = document.getElementById('registrar-form-body');
+  const icon = document.getElementById('registrar-toggle-icon');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  icon.textContent = open ? '˅' : '›';
+  if (open) {
+    // reset addr-detected visibility
+    const det = document.getElementById('addr-detected');
+    if (det) det.style.display = 'none';
+  }
 }
 
 // ── FORM ──────────────────────────────────────────────
@@ -1337,7 +1352,6 @@ function renderVisitCard(v) {
         <div>
           <div class="visit-address">${escHtml(v.direccion)}${v.apto ? ' — Apto ' + escHtml(v.apto) : ''}</div>
           <div class="visit-meta">
-            <span class="visit-tag">Manz. ${escHtml(v.manzana)}</span>
             <span class="visit-tag">${formatDate(v.fecha)}</span>
             <span class="visit-tag">${v.horario === "AM" ? "🌅" : "🌇"} ${v.horario}</span>
             ${nombreHtml}
@@ -2279,6 +2293,7 @@ document.addEventListener('click', e => {
 
 // ── START ──────────────────────────────────────────────
 init();
+renderLista();
 
 // ── SERVICE WORKER ──────────────────────────────────────
 if ('serviceWorker' in navigator) {
