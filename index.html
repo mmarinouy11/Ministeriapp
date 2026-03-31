@@ -781,20 +781,6 @@
     <div class="stats-grid" id="stats-grid"></div>
 
     <div class="card">
-      <div class="card-title">Visitas por Territorio</div>
-      <div id="by-territorio"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🔔 Notificaciones</div>
-      <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:14px">Activá los recordatorios para revisitas programadas, próximas visitas y el informe de fin de mes.</p>
-      <button class="btn btn-primary" onclick="activarNotificaciones()" id="btn-notif">
-        🔔 Activar notificaciones
-      </button>
-      <p id="notif-estado" style="margin-top:10px;font-size:12px;color:var(--text3)"></p>
-    </div>
-
-    <div class="card">
       <div class="card-title">💾 Backup de datos</div>
       <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:16px;">
         Exportá tus visitas como archivo para guardar un respaldo o pasarlas a otro teléfono. Para restaurar, usá el botón Importar y seleccioná el archivo exportado.
@@ -2591,105 +2577,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ── NOTIFICACIONES LOCALES ───────────────────────────────
-async function pedirPermisoNotificaciones() {
-  if (!('Notification' in window)) return false;
-  if (Notification.permission === 'granted') return true;
-  if (Notification.permission === 'denied') return false;
-  const result = await Notification.requestPermission();
-  return result === 'granted';
-}
-
-function mostrarNotificacion(titulo, cuerpo, tag) {
-  if (Notification.permission !== 'granted') return;
-  navigator.serviceWorker.ready.then(sw => {
-    sw.showNotification(titulo, {
-      body: cuerpo,
-      icon: './icon-192.png',
-      badge: './icon-192.png',
-      tag: tag,
-      renotify: false
-    });
-  }).catch(() => {
-    new Notification(titulo, { body: cuerpo, icon: './icon-192.png' });
-  });
-}
-
-function verificarNotificaciones() {
-  if (Notification.permission !== 'granted') return;
-  const hoy = today();
-  const now = new Date();
-
-  // 1. Revisitas pendientes (con próxima visita = hoy o anterior)
-  const misVisitas = visitas.filter(v => !currentUser || v.usuario === currentUser);
-  const revisitasVencidas = misVisitas.filter(v =>
-    v.estado === 'revisita' && v.proximaVisita && v.proximaVisita <= hoy
-  );
-  if (revisitasVencidas.length > 0) {
-    mostrarNotificacion(
-      '👋 Revisitas pendientes',
-      `Tenés ${revisitasVencidas.length} revisita${revisitasVencidas.length > 1 ? 's' : ''} programada${revisitasVencidas.length > 1 ? 's' : ''} para hoy o días anteriores.`,
-      'revisitas-pendientes'
-    );
-  }
-
-  // 2. Próxima visita hoy
-  const visitasHoy = misVisitas.filter(v =>
-    v.estado === 'revisita' && v.proximaVisita === hoy
-  );
-  if (visitasHoy.length > 0) {
-    const nombres = visitasHoy.map(v => v.nombre || v.direccion).join(', ');
-    mostrarNotificacion(
-      '📅 Visita programada para hoy',
-      nombres,
-      'visita-hoy'
-    );
-  }
-
-  // 3. Último día del mes → recordatorio de informe
-  const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  if (now.getDate() === ultimoDia) {
-    mostrarNotificacion(
-      '📋 Fin de mes',
-      '¡Acordate de enviar el informe de actividad del mes!',
-      'informe-mes'
-    );
-  }
-}
-
-async function activarNotificaciones() {
-  const ok = await pedirPermisoNotificaciones();
-  if (ok) {
-    localStorage.setItem('notif_activas', '1');
-    showToast('🔔 Notificaciones activadas');
-    verificarNotificaciones();
-  } else {
-    showToast('⚠️ Permiso denegado — revisá la configuración del navegador');
-  }
-}
-
-// Verificar al cargar si ya tienen permiso
-window.addEventListener('load', () => {
-  if (Notification.permission === 'granted') {
-    setTimeout(verificarNotificaciones, 2000);
-  }
-  // Update button state
-  const btn = document.getElementById('btn-notif');
-  const estado = document.getElementById('notif-estado');
-  if (btn && estado) {
-    if (!('Notification' in window)) {
-      btn.disabled = true;
-      estado.textContent = 'Tu navegador no soporta notificaciones.';
-    } else if (Notification.permission === 'granted') {
-      btn.textContent = '✅ Notificaciones activas';
-      btn.classList.replace('btn-primary', 'btn-secondary');
-      estado.textContent = 'Se verifican al abrir la app.';
-    } else if (Notification.permission === 'denied') {
-      btn.disabled = true;
-      estado.textContent = 'Permiso denegado — habilitalo desde la configuración del navegador.';
-    }
-  }
-});
 </script>
 </body>
 </html>
