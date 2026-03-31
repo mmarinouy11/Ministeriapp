@@ -399,6 +399,8 @@
     margin-bottom: 10px;
   }
 
+  select[data-auto="1"] { background: var(--accent-light); color: var(--accent); font-weight: 600; border-color: #c2d0e0; }
+
   /* AUTOCOMPLETE */
   .autocomplete-wrap { position: relative; }
   .addr-suggestions {
@@ -611,27 +613,30 @@
       </div>
       <div id="registrar-form-body" style="display:none;margin-top:14px">
 
-      <div class="form-row" style="grid-template-columns:1fr 90px">
+      <div class="form-row single">
         <div class="form-group">
           <label>Dirección / Casa</label>
-          <div class="autocomplete-wrap">
-            <input type="text" id="f-direccion" placeholder="Escribí la calle y número..." autocomplete="off" oninput="onDireccionInput()">
-            <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
+          <div style="display:flex;gap:8px">
+            <div class="autocomplete-wrap" style="flex:1">
+              <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()">
+              <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
+            </div>
+            <input type="text" id="f-apto" placeholder="Apto" style="width:70px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
           </div>
           <div class="addr-detected" id="addr-detected"></div>
         </div>
-        <div class="form-group">
-          <label>Apto</label>
-          <input type="text" id="f-apto" placeholder="101...">
-        </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-row trio">
         <div class="form-group">
           <label>Territorio</label>
-          <select id="f-territorio">
+          <select id="f-territorio" onchange="this.removeAttribute('data-auto')">
             <option value="">—</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="f-fecha">
         </div>
         <div class="form-group">
           <label>Horario</label>
@@ -645,10 +650,6 @@
       <input type="hidden" id="f-manzana" value="">
 
       <div class="form-row">
-        <div class="form-group">
-          <label>Fecha</label>
-          <input type="date" id="f-fecha">
-        </div>
         <div class="form-group">
           <label>Tipo de visita</label>
           <select id="f-tipo" onchange="toggleTipoFields()">
@@ -1201,6 +1202,8 @@ function limpiarForm() {
   document.getElementById('f-fecha').value = today();
   document.getElementById('f-proxima').value = '';
   document.getElementById('f-tipo').value = 'nc';
+  document.getElementById('f-territorio').removeAttribute('data-auto');
+  document.getElementById('addr-detected').style.display = 'none';
   toggleTipoFields();
 }
 
@@ -2271,14 +2274,17 @@ async function geocodificarYDetectar(q) {
 
 function aplicarDeteccion(lng, lat) {
   const det = document.getElementById('addr-detected');
+  const sel = document.getElementById('f-territorio');
   const found = detectarTerritorio(lng, lat);
   if (found) {
-    document.getElementById('f-territorio').value = found.territorio;
+    sel.value = found.territorio;
+    sel.setAttribute('data-auto', '1');
     det.className = 'addr-detected';
-    det.textContent = '✅ Territorio ' + found.territorio + ' — Zona ' + found.zona + ' (detectado automáticamente)';
+    det.textContent = '✅ T-' + found.territorio + ' · Zona ' + found.zona;
   } else {
+    sel.removeAttribute('data-auto');
     det.className = 'addr-detected notfound';
-    det.textContent = '⚠️ Dirección fuera del territorio — completá manualmente';
+    det.textContent = '⚠️ Fuera del territorio — completá manualmente';
   }
   det.style.display = 'block';
 }
