@@ -1917,59 +1917,56 @@ function onDireccionInput() {
     return;
   }
 
-  // New search — reset street selection
+  // New search — show local results instantly
   if (!/\s+\d+/.test(q)) selectedStreet = '';
   det.style.display = 'none';
-  sug.innerHTML = '<div class="addr-suggestion-item" style="color:var(--text3)">Buscando...</div>';
-  sug.style.display = 'block';
-  addrDebounce = setTimeout(() => buscarNominatim(q), 500);
+
+  const matches = buscarCalles(q);
+  if (matches.length) {
+    addrSuggestionsData = matches.map(s => ({ street: s, num: '' }));
+    sug.innerHTML = matches.map((s, i) =>
+      `<div class="addr-suggestion-item" onclick="selectSuggestion(${i})"><strong>${s}</strong><br><small style="color:var(--text3)">Blanqueada, Montevideo</small></div>`
+    ).join('');
+    sug.style.display = 'block';
+  } else {
+    sug.innerHTML = '<div class="addr-suggestion-item" style="color:var(--text3)">Sin resultados en el territorio</div>';
+    sug.style.display = 'block';
+  }
+}
+
+// ── Calles del territorio (autocompletado local) ─────────
+const CALLES = ["8 de Octubre","Agaces","Alonso de Ercilla","Antonio Normosa","Apóstol","Arezzo","Av. Gral. Garibaldi","Av. José Pedro Varela","Av. Larrañaga","Av. Luis Alberto de Herrera","Av. Monte Caseros","Av. República de Cuba","Avellaneda","Brazo Largo","C. Anaya","Cabildo","Camino Chiquito","Camino Corrales","Carlos A. López","Charrúa","Dr. Luis A. Suárez","Emilio Raña","Francisco Muñoz","Freybenio","Fuentes Chiquitinas","Giménez","Gral. Flores","Gral. Garibaldi","Gral. Urquiza","Himberg","Instrucciones","Javier Barrios Amorín","Joanicó","José Batlle y Ordóñez","José Enrique Rodó","José Pedro Varela","Juan F. Martínez","Juan Fernández Martínez","Julio Ardao","Larrañaga","Lecoq","Luis Alberto de Herrera","Millán","Monte Caseros","Odriozola","Oduber","Pernas","Pesaro","Propios","Purificación","R. Gómez","República de Corea","República de Cuba","Sayago","Sierra Capdevila","Szymiento","Tambo","Thomson","Tomás Claramunt"];
+
+function normStr(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function buscarCalles(q) {
+  const qn = normStr(q);
+  return CALLES.filter(c => normStr(c).includes(qn)).slice(0, 7);
 }
 
 async function buscarNominatim(q) {
   const sug = document.getElementById('addr-suggestions');
   try {
-    // Also search without accents to handle "joan" → "joanicó"
-    const qNorm = q.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const base = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=uy&limit=6&viewbox=-56.177,-34.867,-56.138,-34.907&bounded=0';
-
-    const queries = [q + ', Montevideo, Uruguay'];
-    if (qNorm !== q) queries.push(qNorm + ', Montevideo, Uruguay');
-
-    const results = await Promise.all(queries.map(query =>
-      fetch(base + '&q=' + encodeURIComponent(query), { headers: { 'Accept-Language': 'es' } })
-        .then(r => r.json()).catch(() => [])
-    ));
-
-    // Merge and deduplicate
-    const seen = new Set();
-    const data = results.flat().filter(r => {
-      if (seen.has(r.place_id)) return false;
-      seen.add(r.place_id);
-      return true;
-    });
-
-    if (!data.length) {
-      sug.innerHTML = '<div class="addr-suggestion-item" style="color:var(--text3)">Sin resultados</div>';
-      return;
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=uy&limit=1'
+      + '&q=' + encodeURIComponent(q + ', Montevideo, Uruguay')
+      + '&viewbox=-56.177,-34.867,-56.138,-34.907&bounded=0';
+    const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+    const data = await res.json();
+    if (data && data.length) {
+      aplicarDeteccion(parseFloat(data[0].lon), parseFloat(data[0].lat));
+    } else {
+      const det = document.getElementById('addr-detected');
+      det.className = 'addr-detected notfound';
+      det.textContent = '⚠️ No se encontró — completá el territorio manualmente';
+      det.style.display = 'block';
     }
-
-    addrSuggestionsData = data.map(r => ({
-      street: r.address.road || r.address.pedestrian || r.address.suburb || (r.display_name || '').split(',')[0],
-      num:    r.address.house_number || '',
-      lng:    parseFloat(r.lon),
-      lat:    parseFloat(r.lat),
-      display: r.display_name || ''
-    }));
-
-    sug.innerHTML = addrSuggestionsData.map((r, i) =>
-      `<div class="addr-suggestion-item" onclick="selectSuggestion(${i})">
-        <strong>${r.street}${r.num ? ' ' + r.num : ''}</strong><br>
-        <small style="color:var(--text3)">${(r.display || '').split(',').slice(1,3).join(',').trim()}</small>
-      </div>`
-    ).join('');
   } catch(e) {
-    console.error('Nominatim error:', e.name, e.message);
-    sug.innerHTML = '<div class="addr-suggestion-item" style="color:var(--text3)">⚠️ Error: ' + e.message + '</div>';
+    const det = document.getElementById('addr-detected');
+    det.className = 'addr-detected notfound';
+    det.textContent = '⚠️ Sin conexión — completá el territorio manualmente';
+    det.style.display = 'block';
   }
 }
 
@@ -1980,42 +1977,16 @@ function selectSuggestion(i) {
   const input = document.getElementById('f-direccion');
   sug.style.display = 'none';
   selectedStreet = item.street;
-
-  if (item.num) {
-    // Has street number → detect territory right away
-    input.value = item.street + ' ' + item.num;
-    aplicarDeteccion(item.lng, item.lat);
-  } else {
-    // No number → fill street, wait for user to type number
-    input.value = item.street + ' ';
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-    det.className = 'addr-detected';
-    det.textContent = '✏️ Escribí el número de puerta';
-    det.style.display = 'block';
-  }
+  input.value = item.street + ' ';
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+  det.className = 'addr-detected';
+  det.textContent = '✏️ Escribí el número de puerta';
+  det.style.display = 'block';
 }
 
 async function geocodificarYDetectar(q) {
-  const det = document.getElementById('addr-detected');
-  try {
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&q='
-      + encodeURIComponent(q + ', Montevideo, Uruguay')
-      + '&limit=1&addressdetails=1&countrycodes=uy';
-    const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-    const data = await res.json();
-    if (data && data.length) {
-      aplicarDeteccion(parseFloat(data[0].lon), parseFloat(data[0].lat));
-    } else {
-      det.className = 'addr-detected notfound';
-      det.textContent = '⚠️ No se encontró — completá el territorio manualmente';
-      det.style.display = 'block';
-    }
-  } catch(e) {
-    det.className = 'addr-detected notfound';
-    det.textContent = '⚠️ Sin conexión — completá el territorio manualmente';
-    det.style.display = 'block';
-  }
+  await buscarNominatim(q);
 }
 
 function aplicarDeteccion(lng, lat) {
