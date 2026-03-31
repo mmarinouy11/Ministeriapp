@@ -1530,13 +1530,26 @@ function renderResumen() {
   const nc = mis.filter(v => v.estado === 'nc').length;
   const carta = mis.filter(v => v.estado === 'carta').length;
   const rev = mis.filter(v => v.estado === 'revisita').length;
-  const comp = mis.filter(v => v.estado === 'completado').length;
+
+  // Horas del mes actual
+  const now = new Date();
+  const mesKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const mesHoras = horasData[mesKey] || { meta: 0, dias: {} };
+  const totalReal = Object.values(mesHoras.dias).reduce((s, d) => s + (d.real || 0), 0);
+  const horasLabel = mesHoras.meta
+    ? `${totalReal} / ${mesHoras.meta} hs`
+    : `${totalReal} hs`;
+
+  // Estudiantes activos (con al menos 1 sesión en el mes actual)
+  const estActivos = new Set();
+  Object.values(mesHoras.dias).forEach(d => (d.estudios || []).forEach(e => estActivos.add(e.estudianteId)));
 
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card"><div class="stat-number">${nc}</div><div class="stat-label">No en casa</div></div>
     <div class="stat-card"><div class="stat-number">${carta}</div><div class="stat-label">Cartas dejadas</div></div>
     <div class="stat-card"><div class="stat-number">${rev}</div><div class="stat-label">Revisitas pendientes</div></div>
-    <div class="stat-card"><div class="stat-number">${comp}</div><div class="stat-label">Completadas</div></div>
+    <div class="stat-card"><div class="stat-number">${horasLabel}</div><div class="stat-label">Horas del mes</div></div>
+    <div class="stat-card"><div class="stat-number">${estActivos.size}</div><div class="stat-label">Estudios activos</div></div>
   `;
 
   // Por territorio
@@ -1770,15 +1783,20 @@ async function renderMapaPines() {
 
 // ── BACKUP ──────────────────────────────────────────────
 function exportarDatos() {
-  const mis = visitas.filter(v => !currentUser || v.usuario === currentUser);
-  if (mis.length === 0) { showToast('No hay visitas para exportar'); return; }
-  const payload = { usuario: currentUser, exportadoEn: new Date().toISOString(), visitas: mis };
+  const misVisitas = visitas.filter(v => !currentUser || v.usuario === currentUser);
+  const payload = {
+    version: 2,
+    usuario: currentUser,
+    exportadoEn: new Date().toISOString(),
+    visitas: misVisitas,
+    estudiantes: estudiantes,
+    horas: horasData
+  };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const fecha = new Date().toISOString().split('T')[0];
   a.href = url;
-  a.download = `ministeriapp-backup-${fecha}.json`;
+  a.download = `ministeriapp-backup-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('⬇️ Backup exportado');
@@ -1791,18 +1809,43 @@ function importarDatos(e) {
   reader.onload = function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
+      let resumen = [];
+
+      // Visitas
       const importadas = data.visitas || [];
-      if (!Array.isArray(importadas) || importadas.length === 0) throw new Error('vacío');
-      // Merge: add only IDs not already present
-      const existingIds = new Set(visitas.map(v => v.id));
-      const nuevas = importadas.filter(v => !existingIds.has(v.id));
-      visitas = [...visitas, ...nuevas];
-      save();
-      renderResumen();
+      if (importadas.length > 0) {
+        const existingIds = new Set(visitas.map(v => v.id));
+        const nuevas = importadas.filter(v => !existingIds.has(v.id));
+        visitas = [...visitas, ...nuevas];
+        save();
+        resumen.push(`${nuevas.length} visita${nuevas.length !== 1 ? 's' : ''} nuevas`);
+      }
+
+      // Estudiantes
+      const impEst = data.estudiantes || [];
+      if (impEst.length > 0) {
+        const existingIds = new Set(estudiantes.map(e => e.id));
+        const nuevos = impEst.filter(e => !existingIds.has(e.id));
+        estudiantes = [...estudiantes, ...nuevos];
+        saveEstudiantes();
+        resumen.push(`${nuevos.length} estudiante${nuevos.length !== 1 ? 's' : ''} nuevos`);
+      }
+
+      // Horas — merge by month key
+      const impHoras = data.horas || {};
+      Object.keys(impHoras).forEach(k => {
+        if (!horasData[k]) horasData[k] = impHoras[k];
+      });
+      if (Object.keys(impHoras).length > 0) {
+        saveHoras();
+        resumen.push('actividad importada');
+      }
+
       const msg = document.getElementById('import-msg');
-      msg.textContent = `✓ ${nuevas.length} visita${nuevas.length !== 1 ? 's' : ''} importada${nuevas.length !== 1 ? 's' : ''} (${importadas.length - nuevas.length} ya existían).`;
+      msg.textContent = resumen.length ? '✓ ' + resumen.join(', ') : '✓ Datos importados';
       msg.style.display = 'block';
-      showToast(`✓ ${nuevas.length} visitas importadas`);
+      showToast('✓ Backup restaurado');
+      renderResumen();
     } catch {
       alert('El archivo no es válido. Asegurate de usar un backup exportado desde Ministeriapp.');
     }
@@ -1905,45 +1948,23 @@ function compartirInformeActividad() {
   const tituloFmt = titulo.charAt(0).toUpperCase() + titulo.slice(1);
 
   const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
-  const totalPlan = Object.values(mes.dias).reduce((s, d) => s + (d.plan || 0), 0);
+  const tuvoActividad = totalReal > 0;
 
-  // Count estudios
-  const totalEstudios = Object.values(mes.dias).reduce((s, d) => s + ((d.estudios || []).length), 0);
+  // Estudiantes con al menos 1 sesión en el mes
+  const estudiantesConSesion = new Set();
+  Object.values(mes.dias).forEach(d => (d.estudios || []).forEach(e => estudiantesConSesion.add(e.estudianteId)));
 
-  // Count unique estudiantes
-  const estudiantesIds = new Set();
-  Object.values(mes.dias).forEach(d => (d.estudios || []).forEach(e => estudiantesIds.add(e.estudianteId)));
-
-  let msg = `📖 *Informe de actividad — ${tituloFmt}*\n`;
+  let msg = `📖 *Informe — ${tituloFmt}*\n`;
   msg += `👤 ${currentUser}\n\n`;
+  msg += `✅ *Tuvo actividad:* ${tuvoActividad ? 'SÍ' : 'NO'}\n`;
 
   if (mes.meta) {
-    const pct = Math.round(totalReal / mes.meta * 100);
-    msg += `⏱ *Horas:* ${totalReal} / ${mes.meta} hs (${pct}%)\n`;
-  } else {
-    msg += `⏱ *Horas:* ${totalReal} hs\n`;
+    msg += `⏱ *Horas:* ${totalReal} / ${mes.meta} hs\n`;
   }
 
-  if (totalPlan > 0) msg += `📋 *Planificadas:* ${totalPlan} hs\n`;
-
-  if (totalEstudios > 0) {
-    msg += `📖 *Estudios bíblicos:* ${totalEstudios} sesión${totalEstudios !== 1 ? 'es' : ''} (${estudiantesIds.size} estudiante${estudiantesIds.size !== 1 ? 's' : ''})\n`;
-
-    // Detail per student
-    estudiantesIds.forEach(id => {
-      const est = estudiantes.find(e => e.id === id);
-      if (!est) return;
-      const sesiones = Object.values(mes.dias)
-        .flatMap(d => (d.estudios || []).filter(e => e.estudianteId === id));
-      msg += `  · ${est.nombre}: ${sesiones.length} sesión${sesiones.length !== 1 ? 'es' : ''}\n`;
-    });
+  if (estudiantesConSesion.size > 0) {
+    msg += `📖 *Estudiantes:* ${estudiantesConSesion.size}\n`;
   }
-
-  // Days worked
-  const diasTrabajados = Object.values(mes.dias).filter(d => d.real > 0).length;
-  if (diasTrabajados > 0) msg += `📅 *Días de servicio:* ${diasTrabajados}\n`;
-
-  msg += '\n_Enviado desde Ministeriapp_';
 
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }
