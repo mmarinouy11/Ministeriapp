@@ -611,83 +611,74 @@
         <div style="font-family:'DM Serif Display',serif;font-size:16px;font-weight:400">＋ Registrar visita</div>
         <span id="registrar-toggle-icon" style="font-size:18px;color:var(--text3)">›</span>
       </div>
-      <div id="registrar-form-body" style="display:none;margin-top:14px">
+      <div id="registrar-form-body" style="display:none;margin-top:12px">
 
-      <div class="form-row single">
-        <div class="form-group">
-          <label>Dirección / Casa</label>
-          <div style="display:flex;gap:8px">
-            <div class="autocomplete-wrap" style="flex:1">
-              <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()">
-              <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
-            </div>
-            <input type="text" id="f-apto" placeholder="Apto" style="width:70px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
-          </div>
-          <div class="addr-detected" id="addr-detected"></div>
+      <!-- Dirección + Apto -->
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <div class="autocomplete-wrap" style="flex:1">
+          <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()" style="width:100%">
+          <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
         </div>
+        <input type="text" id="f-apto" placeholder="Apto" style="width:65px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
       </div>
 
-      <div class="form-row trio">
-        <div class="form-group">
-          <label>Territorio</label>
-          <select id="f-territorio" onchange="this.removeAttribute('data-auto')">
-            <option value="">—</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Fecha</label>
-          <input type="date" id="f-fecha">
-        </div>
-        <div class="form-group">
-          <label>Horario</label>
-          <select id="f-horario">
-            <option value="AM">🌅 AM</option>
-            <option value="PM">🌇 PM</option>
-          </select>
-        </div>
+      <!-- Territorio (justo debajo de dirección) -->
+      <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+        <div class="addr-detected" id="addr-detected" style="flex:1;margin:0"></div>
+        <select id="f-territorio" onchange="this.removeAttribute('data-auto')" style="width:90px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);outline:none">
+          <option value="">T —</option>
+        </select>
       </div>
 
+      <!-- Fecha + Horario -->
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="date" id="f-fecha" style="flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+        <select id="f-horario" style="width:85px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+          <option value="AM">🌅 AM</option>
+          <option value="PM">🌇 PM</option>
+        </select>
+      </div>
+
+      <!-- Tipo -->
+      <div style="margin-bottom:10px">
+        <select id="f-tipo" onchange="toggleTipoFields()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+          <option value="nc">🔴 No en casa</option>
+          <option value="revisita">🔵 Revisita</option>
+        </select>
+      </div>
+
+      <!-- Hidden -->
       <input type="hidden" id="f-manzana" value="">
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Tipo de visita</label>
-          <select id="f-tipo" onchange="toggleTipoFields()">
-            <option value="nc">🔴 No en casa</option>
-            <option value="revisita">🔵 Revisita</option>
-          </select>
-        </div>
-      </div>
 
       <!-- Solo revisita -->
       <div id="persona-fields" class="persona-section hidden">
-        <div class="label">📝 Datos de la persona encontrada</div>
-        <div class="form-row trio">
+        <div class="label">📝 Datos de la persona</div>
+        <div class="form-row">
           <div class="form-group">
-            <label>Nombre (opcional)</label>
+            <label>Nombre</label>
             <input type="text" id="f-nombre" placeholder="Nombre">
           </div>
           <div class="form-group">
-            <label>Celular (opcional)</label>
+            <label>Celular</label>
             <input type="tel" id="f-celular" placeholder="099 123 456">
-          </div>
-          <div class="form-group">
-            <label>Próxima visita</label>
-            <input type="date" id="f-proxima">
           </div>
         </div>
         <div class="form-row single">
           <div class="form-group">
-            <label>Notas / Temas de interés</label>
-            <textarea id="f-notas-revisita" placeholder="Ej: Interesada en resurrección, tiene Biblia..."></textarea>
+            <label>Notas</label>
+            <textarea id="f-notas-revisita" placeholder="Temas de interés..." style="min-height:56px"></textarea>
           </div>
         </div>
+        <input type="hidden" id="f-proxima" value="">
       </div>
 
-      <div class="btn-group">
-        <button class="btn btn-primary" onclick="registrarVisita()">Guardar visita</button>
-        <button class="btn btn-secondary" onclick="limpiarForm()">Limpiar</button>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-primary" style="flex:1" onclick="registrarVisita()">Guardar</button>
+        <button class="btn btn-secondary" onclick="limpiarForm()">✕</button>
       </div>
+
+      </div><!-- end registrar-form-body -->
+
       </div><!-- end registrar-form-body -->
     </div><!-- end registrar card -->
 
@@ -1178,6 +1169,14 @@ function showPage(page) {
   if (page === 'estudiantes') renderEstudiantes();
 }
 
+function toggleCamposExtra() {
+  const el = document.getElementById('campos-extra');
+  const icon = document.getElementById('campos-extra-icon');
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  icon.textContent = open ? '˅' : '›';
+}
+
 function toggleRegistrarForm() {
   const body = document.getElementById('registrar-form-body');
   const icon = document.getElementById('registrar-toggle-icon');
@@ -1204,6 +1203,9 @@ function limpiarForm() {
   document.getElementById('f-tipo').value = 'nc';
   document.getElementById('f-territorio').removeAttribute('data-auto');
   document.getElementById('addr-detected').style.display = 'none';
+  const sug = document.getElementById('addr-suggestions');
+  if (sug) sug.style.display = 'none';
+  selectedStreet = '';
   toggleTipoFields();
 }
 
@@ -1212,7 +1214,7 @@ function registrarVisita() {
   const manzana = document.getElementById('f-manzana').value.trim();
   const direccion = document.getElementById('f-direccion').value.trim();
   const apto = document.getElementById('f-apto').value.trim();
-  const fecha = document.getElementById('f-fecha').value;
+  const fecha = today();
   const horario = document.getElementById('f-horario').value;
   const tipo = document.getElementById('f-tipo').value;
 
