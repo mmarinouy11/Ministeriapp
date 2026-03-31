@@ -777,6 +777,10 @@
       </div>
       <p id="import-msg" style="margin-top:12px;font-size:13px;color:var(--accent);display:none"></p>
     </div>
+
+    <p style="font-size:11px;color:var(--text3);text-align:center;line-height:1.6;padding:8px 4px 4px">
+      Ministeriapp es una herramienta personal de organización y no está afiliada, respaldada ni aprobada por la organización de los Testigos de Jehová - Watch Tower Bible and Tract Society. Los datos aquí registrados son de uso estrictamente personal y se almacenan únicamente en este dispositivo.
+    </p>
   </div>
 
   <!-- PAGE: HORAS / ACTIVIDAD -->
@@ -1169,9 +1173,10 @@ function init() {
     }
   });
 
-  // Fecha hoy
+  // Fecha hoy y horario según hora actual
   document.getElementById('f-fecha').value = today();
   document.getElementById('enc-fecha').value = today();
+  document.getElementById('f-horario').value = new Date().getHours() < 12 ? 'AM' : 'PM';
 
   // Load data
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -1234,7 +1239,7 @@ function toggleRegistrarForm() {
   body.style.display = open ? 'block' : 'none';
   icon.textContent = open ? '˅' : '›';
   if (open) {
-    // reset addr-detected visibility
+    document.getElementById('f-horario').value = new Date().getHours() < 12 ? 'AM' : 'PM';
     const det = document.getElementById('addr-detected');
     if (det) det.style.display = 'none';
   }
