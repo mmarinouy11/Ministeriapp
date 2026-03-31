@@ -2607,7 +2607,7 @@ let mapaCampana = null;
 
 async function cargarCampana() {
   try {
-    const res = await fetch(CAMPANA_CSV);
+    const res = await fetch(CAMPANA_CSV + '&nocache=' + Date.now());
     const text = await res.text();
     const lines = text.trim().split('\n').slice(1);
     const estados = {};
