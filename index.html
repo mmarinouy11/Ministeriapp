@@ -425,6 +425,11 @@
   }
   .addr-detected.notfound { background: var(--danger-light); color: var(--danger); border-color: #e8c4c4; }
 
+  #mapa-visitas-wrap { isolation: isolate; }
+  #mapa-visitas .leaflet-pane,
+  #mapa-visitas .leaflet-top,
+  #mapa-visitas .leaflet-bottom { z-index: 1 !important; }
+
   /* HORAS / CALENDAR */
   .meta-btn {
     flex: 1;
