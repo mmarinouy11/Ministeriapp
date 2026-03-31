@@ -2658,7 +2658,8 @@ function iniciarMapaCampana(estados) {
 
   if (allBounds.length) {
     const combined = allBounds.reduce((b, cur) => b.extend(cur), allBounds[0]);
-    mapaCampana.fitBounds(combined, { padding: [-10, -10], maxZoom: 15 });
+    mapaCampana.fitBounds(combined, { padding: [2, 2] });
+    setTimeout(() => mapaCampana.zoomIn(1), 300);
   }
 }
 
