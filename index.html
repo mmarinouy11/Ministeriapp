@@ -616,7 +616,7 @@
       <!-- Dirección + Apto -->
       <div style="display:flex;gap:8px;margin-bottom:6px">
         <div class="autocomplete-wrap" style="flex:1">
-          <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()" style="width:100%">
+          <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;color:var(--text)">
           <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
         </div>
         <input type="text" id="f-apto" placeholder="Apto" style="width:65px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
@@ -1163,6 +1163,13 @@ function showPage(page) {
   document.querySelectorAll('.nav-tab').forEach((t, i) => {
     t.classList.toggle('active', ['lista','horas','estudiantes','resumen'][i] === page);
   });
+  // Hide map when leaving lista
+  if (page !== 'lista' && mapaVisible) {
+    mapaVisible = false;
+    document.getElementById('mapa-visitas-wrap').style.display = 'none';
+    document.getElementById('btn-map-toggle').style.background = '';
+    document.getElementById('btn-map-toggle').style.color = '';
+  }
   if (page === 'lista') renderLista();
   if (page === 'resumen') renderResumen();
   if (page === 'horas') renderCalendario();
