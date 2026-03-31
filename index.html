@@ -1906,27 +1906,30 @@ function onDireccionInput() {
 
   if (q.length < 3) { sug.style.display = 'none'; det.style.display = 'none'; return; }
 
-  // If street already selected and user is typing a number → geocode
-  const hasNumber = selectedStreet && /\s+\d+/.test(q);
-  if (hasNumber) {
+  // Split input into street part and number part
+  const numMatch = q.match(/^(.*?)\s+(\d+\S*)$/);
+  const streetPart = numMatch ? numMatch[1].trim() : q;
+  const numPart = numMatch ? numMatch[2] : '';
+
+  // If street was already selected and user added a number → geocode
+  if (selectedStreet && numPart && normStr(q).startsWith(normStr(selectedStreet))) {
     sug.style.display = 'none';
     det.className = 'addr-detected';
     det.textContent = '📍 Buscando territorio...';
     det.style.display = 'block';
-    addrDebounce = setTimeout(() => geocodificarYDetectar(q), 800);
+    addrDebounce = setTimeout(() => geocodificarYDetectar(q), 700);
     return;
   }
 
-  // New search — show local results instantly
-  if (!/\s+\d+/.test(q)) selectedStreet = '';
+  // Always show street suggestions based on the street part
   det.style.display = 'none';
-
-  const matches = buscarCalles(q);
+  const matches = buscarCalles(streetPart);
   if (matches.length) {
-    addrSuggestionsData = matches.map(s => ({ street: s, num: '' }));
-    sug.innerHTML = matches.map((s, i) =>
-      `<div class="addr-suggestion-item" onclick="selectSuggestion(${i})"><strong>${s}</strong><br><small style="color:var(--text3)">Blanqueada, Montevideo</small></div>`
-    ).join('');
+    addrSuggestionsData = matches.map(s => ({ street: s, num: numPart }));
+    sug.innerHTML = matches.map((s, i) => {
+      const label = s + (numPart ? ' ' + numPart : '');
+      return `<div class="addr-suggestion-item" onclick="selectSuggestion(${i})"><strong>${label}</strong><br><small style="color:var(--text3)">Blanqueada, Montevideo</small></div>`;
+    }).join('');
     sug.style.display = 'block';
   } else {
     sug.innerHTML = '<div class="addr-suggestion-item" style="color:var(--text3)">Sin resultados en el territorio</div>';
@@ -1977,12 +1980,24 @@ function selectSuggestion(i) {
   const input = document.getElementById('f-direccion');
   sug.style.display = 'none';
   selectedStreet = item.street;
-  input.value = item.street + ' ';
-  input.focus();
-  input.setSelectionRange(input.value.length, input.value.length);
-  det.className = 'addr-detected';
-  det.textContent = '✏️ Escribí el número de puerta';
-  det.style.display = 'block';
+
+  if (item.num) {
+    // User typed street + number together → geocode immediately
+    const full = item.street + ' ' + item.num;
+    input.value = full;
+    det.className = 'addr-detected';
+    det.textContent = '📍 Buscando territorio...';
+    det.style.display = 'block';
+    geocodificarYDetectar(full);
+  } else {
+    // No number yet → fill street, wait for number
+    input.value = item.street + ' ';
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+    det.className = 'addr-detected';
+    det.textContent = '✏️ Escribí el número de puerta';
+    det.style.display = 'block';
+  }
 }
 
 async function geocodificarYDetectar(q) {
