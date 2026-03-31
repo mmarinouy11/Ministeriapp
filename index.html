@@ -129,7 +129,7 @@
   }
   .card-title {
     font-family: 'DM Serif Display', serif;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 400;
     margin-bottom: 12px;
     color: var(--text);
@@ -1964,7 +1964,8 @@ function renderCalendario() {
 }
 
 function compartirInformeActividad() {
-  const mes = getMes();
+  const mesKey = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  const mes = horasData[mesKey] || { meta: 0, dias: {} };
   const titulo = new Date(calYear, calMonth, 1).toLocaleDateString('es', { month: 'long', year: 'numeric' });
   const tituloFmt = titulo.charAt(0).toUpperCase() + titulo.slice(1);
 
