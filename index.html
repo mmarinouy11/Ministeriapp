@@ -901,9 +901,9 @@
     </div>
     <div id="campana-contador" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
     <div style="display:flex;gap:12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#16a34a;display:inline-block"></span>Completo</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block"></span>En progreso</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#bfdbfe;border:1px solid #93c5fd;display:inline-block"></span>Pendiente</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#6ee7b7;border:1px solid #34d399;display:inline-block"></span>Completo</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#fde68a;border:1px solid #fcd34d;display:inline-block"></span>En progreso</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#fecdd3;border:1px solid #fda4af;display:inline-block"></span>Pendiente</span>
     </div>
     <div id="mapa-campana" style="height:380px;border-radius:10px;overflow:hidden;border:1px solid var(--border)"></div>
   </div>
@@ -2626,7 +2626,7 @@ async function cargarCampana() {
     const pct = Math.round(completos / total * 100);
     document.getElementById('campana-titulo').textContent = '📣 Avance de campaña';
     document.getElementById('campana-contador').textContent =
-      `${completos} de ${total} territorios completos — ${pct}%`;
+      `${completos} de ${total} territorios completos — ${pct}% de avance`;
 
     openModal('modal-campana');
     setTimeout(() => iniciarMapaCampana(estados), 200);
@@ -2641,8 +2641,8 @@ function iniciarMapaCampana(estados) {
   mapaCampana = L.map('mapa-campana', { zoomControl: true, attributionControl: false });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapaCampana);
 
-  const colors  = { completo: '#16a34a', en_progreso: '#f59e0b', pendiente: '#bfdbfe' };
-  const borders = { completo: '#15803d', en_progreso: '#d97706', pendiente: '#93c5fd' };
+  const colors  = { completo: '#6ee7b7', en_progreso: '#fde68a', pendiente: '#fecdd3' };
+  const borders = { completo: '#34d399', en_progreso: '#fcd34d', pendiente: '#fda4af' };
   const allBounds = [];
 
   TERRITORIOS_GEO.features.forEach(feat => {
@@ -2658,7 +2658,7 @@ function iniciarMapaCampana(estados) {
 
   if (allBounds.length) {
     const combined = allBounds.reduce((b, cur) => b.extend(cur), allBounds[0]);
-    mapaCampana.fitBounds(combined, { padding: [2, 2], maxZoom: 14 });
+    mapaCampana.fitBounds(combined, { padding: [-10, -10], maxZoom: 15 });
   }
 }
 
