@@ -429,6 +429,14 @@
   }
   .terr-label-campana::before { display: none !important; }
 
+  /* TIME STEPPER */
+  .time-stepper { display:flex;flex-direction:column;align-items:center;gap:2px; }
+  .time-stepper input { width:44px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 4px;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none; }
+  .stepper-btn { width:44px;height:26px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);user-select:none; }
+  .stepper-btn:active { background:var(--accent-light); }
+  .time-pair { display:flex;align-items:center;gap:6px; }
+  .time-sep { font-size:20px;font-weight:700;color:var(--text2);margin-bottom:2px; }
+
   .autocomplete-wrap { position: relative; }
   .addr-suggestions {
     position: absolute; top: 100%; left: 0; right: 0;
@@ -931,45 +939,84 @@
   <div class="modal">
     <div class="modal-title" id="modal-dia-titulo">Día</div>
 
-    <!-- Horas normales -->
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:8px">Horas Ministerio</div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-        <span style="font-size:11px;color:var(--text2)">Planificadas</span>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" inputmode="numeric" id="dia-plan-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
-          <span style="font-weight:700;color:var(--text2)">:</span>
-          <input type="number" inputmode="numeric" id="dia-plan-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+    <!-- Horas Ministerio -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:10px">Horas Ministerio</div>
+    <div style="display:flex;gap:16px;margin-bottom:14px">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;text-align:center">Planificadas</div>
+        <div class="time-pair">
+          <div class="time-stepper">
+            <div class="stepper-btn" onclick="stepField('dia-plan-h',1,0,23)">▲</div>
+            <input type="number" inputmode="numeric" id="dia-plan-h" min="0" max="23" placeholder="0">
+            <div class="stepper-btn" onclick="stepField('dia-plan-h',-1,0,23)">▼</div>
+          </div>
+          <div class="time-sep">:</div>
+          <div class="time-stepper">
+            <div class="stepper-btn" onclick="stepField('dia-plan-m',5,0,55)">▲</div>
+            <input type="number" inputmode="numeric" id="dia-plan-m" min="0" max="59" step="5" placeholder="00">
+            <div class="stepper-btn" onclick="stepField('dia-plan-m',-5,0,55)">▼</div>
+          </div>
         </div>
       </div>
-      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-        <span style="font-size:11px;color:var(--text2)">Reales</span>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" inputmode="numeric" id="dia-real-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
-          <span style="font-weight:700;color:var(--text2)">:</span>
-          <input type="number" inputmode="numeric" id="dia-real-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;text-align:center">Reales</div>
+        <div class="time-pair">
+          <div class="time-stepper">
+            <div class="stepper-btn" onclick="stepField('dia-real-h',1,0,23)">▲</div>
+            <input type="number" inputmode="numeric" id="dia-real-h" min="0" max="23" placeholder="0">
+            <div class="stepper-btn" onclick="stepField('dia-real-h',-1,0,23)">▼</div>
+          </div>
+          <div class="time-sep">:</div>
+          <div class="time-stepper">
+            <div class="stepper-btn" onclick="stepField('dia-real-m',5,0,55)">▲</div>
+            <input type="number" inputmode="numeric" id="dia-real-m" min="0" max="59" step="5" placeholder="00">
+            <div class="stepper-btn" onclick="stepField('dia-real-m',-5,0,55)">▼</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Horas de crédito (solo meta 50) -->
+    <!-- Horas de crédito (solo meta 50, colapsable) -->
     <div id="credito-fields" style="display:none">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:8px;padding-top:10px;border-top:1px solid var(--border)">Horas de crédito</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:11px;color:var(--text2)">Planificadas</span>
-          <div style="display:flex;align-items:center;gap:4px">
-            <input type="number" inputmode="numeric" id="dia-credito-plan-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
-            <span style="font-weight:700;color:var(--text2)">:</span>
-            <input type="number" inputmode="numeric" id="dia-credito-plan-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+      <div onclick="toggleCreditoFields()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 0;border-top:1px solid var(--border)">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)">
+          <span id="credito-toggle-icon">›</span> Horas de crédito
+        </span>
+        <span id="credito-resumen" style="font-size:11px;color:var(--text3)"></span>
+      </div>
+      <div id="credito-body" style="display:none;margin-top:6px;margin-bottom:10px">
+        <div style="display:flex;gap:16px">
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:6px;text-align:center">Planificadas</div>
+            <div class="time-pair">
+              <div class="time-stepper">
+                <div class="stepper-btn" onclick="stepField('dia-credito-plan-h',1,0,23)">▲</div>
+                <input type="number" inputmode="numeric" id="dia-credito-plan-h" min="0" max="23" placeholder="0">
+                <div class="stepper-btn" onclick="stepField('dia-credito-plan-h',-1,0,23)">▼</div>
+              </div>
+              <div class="time-sep">:</div>
+              <div class="time-stepper">
+                <div class="stepper-btn" onclick="stepField('dia-credito-plan-m',5,0,55)">▲</div>
+                <input type="number" inputmode="numeric" id="dia-credito-plan-m" min="0" max="59" step="5" placeholder="00">
+                <div class="stepper-btn" onclick="stepField('dia-credito-plan-m',-5,0,55)">▼</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:11px;color:var(--text2)">Reales</span>
-          <div style="display:flex;align-items:center;gap:4px">
-            <input type="number" inputmode="numeric" id="dia-credito-real-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
-            <span style="font-weight:700;color:var(--text2)">:</span>
-            <input type="number" inputmode="numeric" id="dia-credito-real-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:6px;text-align:center">Reales</div>
+            <div class="time-pair">
+              <div class="time-stepper">
+                <div class="stepper-btn" onclick="stepField('dia-credito-real-h',1,0,23)">▲</div>
+                <input type="number" inputmode="numeric" id="dia-credito-real-h" min="0" max="23" placeholder="0">
+                <div class="stepper-btn" onclick="stepField('dia-credito-real-h',-1,0,23)">▼</div>
+              </div>
+              <div class="time-sep">:</div>
+              <div class="time-stepper">
+                <div class="stepper-btn" onclick="stepField('dia-credito-real-m',5,0,55)">▲</div>
+                <input type="number" inputmode="numeric" id="dia-credito-real-m" min="0" max="59" step="5" placeholder="00">
+                <div class="stepper-btn" onclick="stepField('dia-credito-real-m',-5,0,55)">▼</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2403,6 +2450,13 @@ function getHM(prefix) {
   );
 }
 
+function stepField(id, delta, min, max) {
+  const el = document.getElementById(id);
+  let val = parseInt(el.value) || 0;
+  val = Math.min(max, Math.max(min, val + delta));
+  el.value = id.endsWith('-m') ? String(val).padStart(2, '0') : val;
+}
+
 function toggleCreditoFields() {
   const body = document.getElementById('credito-body');
   const icon = document.getElementById('credito-toggle-icon');
@@ -2424,6 +2478,28 @@ function abrirDia(key, d) {
   document.getElementById('credito-fields').style.display = esPionero ? 'block' : 'none';
   setHM('dia-credito-plan', info.creditoPlan);
   setHM('dia-credito-real', info.creditoReal);
+
+  // Auto-expand credit if data exists, otherwise collapse
+  const hayCredito = (info.creditoPlan || 0) > 0 || (info.creditoReal || 0) > 0;
+  const creditoBody = document.getElementById('credito-body');
+  const creditoIcon = document.getElementById('credito-toggle-icon');
+  if (creditoBody) {
+    creditoBody.style.display = hayCredito ? 'block' : 'none';
+    creditoIcon.textContent = hayCredito ? '˅' : '›';
+  }
+  // Show summary when collapsed
+  function fmtS(dec) {
+    if (!dec) return '';
+    const h = Math.floor(dec), m = Math.round((dec-h)*60);
+    return `${h}:${String(m).padStart(2,'0')}`;
+  }
+  const resumen = document.getElementById('credito-resumen');
+  if (resumen) {
+    const parts = [];
+    if (info.creditoPlan) parts.push(`plan ${fmtS(info.creditoPlan)}`);
+    if (info.creditoReal) parts.push(`real ${fmtS(info.creditoReal)}`);
+    resumen.textContent = parts.join(' · ');
+  }
   // Render studies
   renderEstudiosDia(info.estudios || []);
   openModal('modal-dia');
