@@ -830,31 +830,7 @@
         <div style="background:var(--border);border-radius:100px;height:5px;overflow:hidden">
           <div id="horas-bar-plan" style="height:100%;background:var(--info);border-radius:100px;width:0%;transition:width .4s;opacity:0.5"></div>
         </div>
-        <div id="horas-meta-label" style="text-align:right;font-size:10px;color:var(--text3);margin-top:3px">Meta: 0 hs</div>
       </div>
-    </div>
-
-    <!-- Progreso anual (solo meta 50) -->
-    <div class="card" id="anual-progress-card" style="display:none">
-      <div class="card-title">📈 Año de servicio</div>
-      <div id="anual-label" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
-
-      <!-- Barra real acumulada -->
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-        <span style="font-size:12px;font-weight:600;color:var(--text2)">Horas acumuladas</span>
-        <span id="anual-real-label" style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent)">0 hs</span>
-      </div>
-      <!-- Progress bar with linear reference marker -->
-      <div style="position:relative;background:var(--border);border-radius:100px;height:12px;overflow:visible;margin-bottom:6px">
-        <div id="anual-bar-real" style="height:100%;background:var(--accent);border-radius:100px;width:0%;transition:width .4s;position:relative;z-index:1"></div>
-        <!-- Linear reference line -->
-        <div id="anual-ref-line" style="position:absolute;top:-4px;width:2px;height:20px;background:#f59e0b;border-radius:2px;z-index:2;transition:left .4s"></div>
-      </div>
-      <div id="anual-status" style="font-size:12px;margin-bottom:8px"></div>
-
-      <!-- Monthly breakdown mini bars -->
-      <div id="anual-meses" style="display:flex;gap:3px;align-items:flex-end;height:40px;margin-top:8px"></div>
-      <div id="anual-meses-labels" style="display:flex;gap:3px;margin-top:3px"></div>
     </div>
 
     <!-- Month selector + calendar -->
@@ -877,6 +853,36 @@
           <div style="width:12px;height:12px;border-radius:3px;background:#dcfce7;border:1.5px solid #16a34a"></div>
           Real
         </div>
+      </div>
+    </div>
+
+    <!-- Progreso anual (solo meta 50) -->
+    <div class="card" id="anual-progress-card" style="display:none">
+      <div class="card-title">📈 Año de servicio</div>
+      <div id="anual-label" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
+
+      <!-- Barra real acumulada -->
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600;color:var(--text2)">Horas acumuladas (real + proyectado)</span>
+        <span id="anual-real-label" style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent)">0 hs</span>
+      </div>
+      <!-- Progress bar with linear reference marker -->
+      <div style="position:relative;margin-bottom:6px">
+        <div style="background:var(--border);border-radius:100px;height:12px;overflow:hidden;position:relative">
+          <div id="anual-bar-real" style="position:absolute;left:0;top:0;height:100%;background:var(--accent);border-radius:100px;width:0%;transition:width .4s"></div>
+          <div id="anual-bar-proy" style="position:absolute;left:0;top:0;height:100%;background:#93c5fd;border-radius:100px;width:0%;transition:width .4s"></div>
+        </div>
+        <!-- Reference line — sibling of track, positioned by JS -->
+        <div id="anual-ref-line" style="position:absolute;top:-4px;width:3px;height:20px;background:#f59e0b;border-radius:2px;z-index:3;transition:left .4s;transform:translateX(-50%)"></div>
+      </div>
+      <div id="anual-status" style="font-size:12px;margin-bottom:8px"></div>
+
+      <!-- Monthly breakdown mini bars -->
+      <div id="anual-meses" style="display:flex;gap:3px;align-items:flex-end;height:40px;margin-top:8px"></div>
+      <div id="anual-meses-labels" style="display:flex;gap:3px;margin-top:3px"></div>
+      <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--text2)">
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent)"></div>Real</div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:#93c5fd"></div>Proyectado</div>
       </div>
     </div>
 
@@ -924,33 +930,52 @@
 <div class="modal-overlay" id="modal-dia">
   <div class="modal">
     <div class="modal-title" id="modal-dia-titulo">Día</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Horas planificadas</label>
-        <input type="number" inputmode="decimal" id="dia-plan" min="0" max="24" step="0.5" placeholder="0">
+
+    <!-- Horas normales -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:8px">Horas Ministerio</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:11px;color:var(--text2)">Planificadas</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" inputmode="numeric" id="dia-plan-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+          <span style="font-weight:700;color:var(--text2)">:</span>
+          <input type="number" inputmode="numeric" id="dia-plan-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+        </div>
       </div>
-      <div class="form-group">
-        <label>Horas reales</label>
-        <input type="number" inputmode="decimal" id="dia-real" min="0" max="24" step="0.5" placeholder="0">
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:11px;color:var(--text2)">Reales</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" inputmode="numeric" id="dia-real-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+          <span style="font-weight:700;color:var(--text2)">:</span>
+          <input type="number" inputmode="numeric" id="dia-real-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+        </div>
       </div>
     </div>
 
     <!-- Horas de crédito (solo meta 50) -->
     <div id="credito-fields" style="display:none">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:6px;margin-top:4px">Horas de crédito</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Plan. crédito</label>
-          <input type="number" inputmode="decimal" id="dia-credito-plan" min="0" max="24" step="0.5" placeholder="0">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:8px;padding-top:10px;border-top:1px solid var(--border)">Horas de crédito</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:11px;color:var(--text2)">Planificadas</span>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" inputmode="numeric" id="dia-credito-plan-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+            <span style="font-weight:700;color:var(--text2)">:</span>
+            <input type="number" inputmode="numeric" id="dia-credito-plan-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Real crédito</label>
-          <input type="number" inputmode="decimal" id="dia-credito-real" min="0" max="24" step="0.5" placeholder="0">
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:11px;color:var(--text2)">Reales</span>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" inputmode="numeric" id="dia-credito-real-h" min="0" max="23" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+            <span style="font-weight:700;color:var(--text2)">:</span>
+            <input type="number" inputmode="numeric" id="dia-credito-real-m" min="0" max="59" step="5" placeholder="00" style="width:48px;text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none">
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="form-group" style="margin-bottom:10px">
+    <div class="form-group" style="margin-bottom:10px;padding-top:10px;border-top:1px solid var(--border)">
       <label>Comentario</label>
       <input type="text" id="dia-comentario" placeholder="¿Cómo fue la actividad?" style="width:100%">
     </div>
@@ -2041,14 +2066,20 @@ function setMeta(val) {
 }
 
 function cambiarMes(dir) {
+  // Remember current meta before switching
+  const metaActual = getMes().meta;
+
   calMonth += dir;
   if (calMonth > 11) { calMonth = 0; calYear++; }
   if (calMonth < 0)  { calMonth = 11; calYear--; }
-  // Don't go before current month
-  const now = new Date();
-  if (calYear < now.getFullYear() || (calYear === now.getFullYear() && calMonth < now.getMonth())) {
-    calMonth -= dir; if (calMonth > 11) { calMonth=0; calYear++; } if (calMonth < 0) { calMonth=11; calYear--; }
+
+  // If new month has no meta set yet and previous was 50, inherit it
+  const nuevoMes = getMes();
+  if (nuevoMes.meta === 0 && metaActual === 50) {
+    nuevoMes.meta = 50;
+    saveHoras();
   }
+
   renderCalendario();
 }
 
@@ -2090,27 +2121,38 @@ function renderCalendario() {
       hasReal ? 'has-real' : ''
     ].filter(Boolean).join(' ');
 
-    // Build hours label — show normal and credit separately if both exist
+    // Format decimal as h:mm always
+    function fmtHM(dec) {
+      if (!dec) return '';
+      const h = Math.floor(dec);
+      const m = Math.round((dec - h) * 60);
+      return `${h}:${String(m).padStart(2,'0')}`;
+    }
+
     const realNorm = info.real || 0;
     const realCred = info.creditoReal || 0;
     const planNorm = info.plan || 0;
     const planCred = info.creditoPlan || 0;
-    let hrsLabel = '';
+
+    let lineaNorm = '';
+    let lineaCred = '';
+
     if (hasReal) {
-      hrsLabel = realNorm > 0 ? `${realNorm}h` : '';
-      if (realCred > 0) hrsLabel += (hrsLabel ? `+${realCred}c` : `${realCred}c`);
+      if (realNorm > 0) lineaNorm = fmtHM(realNorm);
+      if (realCred > 0) lineaCred = fmtHM(realCred);
     } else if (hasPlan) {
-      hrsLabel = planNorm > 0 ? `${planNorm}h` : '';
-      if (planCred > 0) hrsLabel += (hrsLabel ? `+${planCred}c` : `${planCred}c`);
+      if (planNorm > 0) lineaNorm = fmtHM(planNorm);
+      if (planCred > 0) lineaCred = fmtHM(planCred);
     }
 
     const hasEstudios = info.estudios && info.estudios.length > 0;
     const hasComentario = info.comentario && info.comentario.length > 0;
     html += `<div class="${cls}" onclick="abrirDia('${key}', ${d})" title="${hasComentario ? info.comentario : ''}">
       <span class="cal-day-num">${d}</span>
-      ${hrsLabel ? `<span class="cal-day-hrs" style="font-size:9px">${hrsLabel}</span>` : ''}
+      ${lineaNorm ? `<span class="cal-day-hrs" style="font-size:9px">${lineaNorm}</span>` : ''}
+      ${lineaCred ? `<span class="cal-day-hrs" style="font-size:8px;color:#7c3aed">${lineaCred}</span>` : ''}
       ${hasEstudios ? `<span style="font-size:8px;color:var(--info)">📖${info.estudios.length}</span>` : ''}
-      ${hasComentario && !hrsLabel ? `<span style="font-size:8px;color:var(--text3)">💬</span>` : ''}
+      ${hasComentario && !lineaNorm && !lineaCred ? `<span style="font-size:8px;color:var(--text3)">💬</span>` : ''}
     </div>`;
   }
   container.innerHTML = html;
@@ -2122,27 +2164,65 @@ function compartirInformeActividad() {
   const titulo = new Date(calYear, calMonth, 1).toLocaleDateString('es', { month: 'long', year: 'numeric' });
   const tituloFmt = titulo.charAt(0).toUpperCase() + titulo.slice(1);
 
-  const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
-  const totalCredito = Object.values(mes.dias).reduce((s, d) => s + (d.creditoReal || 0), 0);
-  const tuvoActividad = totalReal > 0 || totalCredito > 0;
+  const totalRealExact = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
+  const totalCreditoExact = Object.values(mes.dias).reduce((s, d) => s + (d.creditoReal || 0), 0);
+  const tuvoActividad = totalRealExact > 0 || totalCreditoExact > 0;
+
+  // Integer hours and leftover minutes
+  const horasEnteras = Math.floor(totalRealExact);
+  const minutosRestantes = Math.round((totalRealExact - horasEnteras) * 60);
+  const horasCreditoEnteras = Math.floor(totalCreditoExact);
+  const minutosCreditoRestantes = Math.round((totalCreditoExact - horasCreditoEnteras) * 60);
 
   // Estudiantes con al menos 1 sesión en el mes
   const estudiantesConSesion = new Set();
   Object.values(mes.dias).forEach(d => (d.estudios || []).forEach(e => estudiantesConSesion.add(e.estudianteId)));
 
+  // Build informe with integer hours only
   let msg = `📖 *Informe — ${tituloFmt}*\n`;
   msg += `👤 ${currentUser}\n\n`;
   msg += `✅ *Tuvo actividad:* ${tuvoActividad ? 'SÍ' : 'NO'}\n`;
-
   if (mes.meta) {
-    msg += `⏱ *Horas:* ${totalReal} / ${mes.meta} hs\n`;
+    msg += `⏱ *Horas:* ${horasEnteras} / ${mes.meta} hs\n`;
   }
-  if (totalCredito > 0) {
-    msg += `⭐ *Horas de crédito:* ${totalCredito} hs\n`;
+  if (horasCreditoEnteras > 0) {
+    msg += `⭐ *Horas de crédito:* ${horasCreditoEnteras} hs\n`;
   }
-
   if (estudiantesConSesion.size > 0) {
     msg += `📖 *Estudiantes:* ${estudiantesConSesion.size}\n`;
+  }
+
+  // Check for leftover minutes
+  const hayMinutos = minutosRestantes > 0 || minutosCreditoRestantes > 0;
+  if (hayMinutos) {
+    let detalleMin = [];
+    if (minutosRestantes > 0) detalleMin.push(`${minutosRestantes} min de horas`);
+    if (minutosCreditoRestantes > 0) detalleMin.push(`${minutosCreditoRestantes} min de crédito`);
+    const detalle = detalleMin.join(' y ');
+
+    // Calculate next month key
+    const nextMonth = calMonth === 11 ? 0 : calMonth + 1;
+    const nextYear = calMonth === 11 ? calYear + 1 : calYear;
+    const nextMesKey = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}`;
+    const nextMesNombre = new Date(nextYear, nextMonth, 1)
+      .toLocaleDateString('es', { month: 'long' });
+
+    const pasar = confirm(`Tenés ${detalle} sobrantes.\n¿Los pasamos a ${nextMesNombre} como saldo del mes anterior?`);
+    if (pasar) {
+      if (!horasData[nextMesKey]) horasData[nextMesKey] = { meta: 0, dias: {} };
+      const saldoKey = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-01`;
+      const diaExistente = horasData[nextMesKey].dias[saldoKey] || {};
+      // Add leftover minutes as decimal to next month's first day
+      const saldoReal = (diaExistente.real || 0) + minutosRestantes / 60;
+      const saldoCredito = (diaExistente.creditoReal || 0) + minutosCreditoRestantes / 60;
+      horasData[nextMesKey].dias[saldoKey] = {
+        ...diaExistente,
+        real: Math.round(saldoReal * 100) / 100,
+        creditoReal: Math.round(saldoCredito * 100) / 100
+      };
+      saveHoras();
+      showToast(`✓ Saldo pasado a ${nextMesNombre}`);
+    }
   }
 
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
@@ -2154,23 +2234,29 @@ function renderProgreso() {
   const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0) + (d.creditoReal || 0), 0);
   const totalPlan = Object.values(mes.dias).reduce((s, d) => s + (d.plan || 0) + (d.creditoPlan || 0), 0);
 
+  function toHM(dec) {
+    const h = Math.floor(dec);
+    const m = Math.round((dec - h) * 60);
+    return `${h}:${String(m).padStart(2,'0')}`;
+  }
+
   if (!mes.meta && totalReal === 0 && totalPlan === 0) { wrap.style.display = 'none'; }
   else {
     wrap.style.display = 'block';
     if (mes.meta) {
-      const pctReal = Math.min(100, Math.round(totalReal / mes.meta * 100));
-      const pctPlan = Math.min(100, Math.round(totalPlan / mes.meta * 100));
-      document.getElementById('horas-real-label').textContent = `${totalReal} / ${mes.meta} hs`;
+      // Use plan as effective meta if it exceeds the standard meta
+      const metaEfectiva = totalPlan > mes.meta ? totalPlan : mes.meta;
+      const pctReal = Math.min(100, Math.round(totalReal / metaEfectiva * 100));
+      const pctPlan = Math.min(100, Math.round(totalPlan / metaEfectiva * 100));
+      document.getElementById('horas-real-label').textContent = `${toHM(totalReal)} / ${toHM(metaEfectiva)} hs`;
       document.getElementById('horas-bar-real').style.width = pctReal + '%';
       document.getElementById('horas-bar-plan').style.width = pctPlan + '%';
-      document.getElementById('horas-meta-label').textContent = `Meta: ${mes.meta} hs`;
     } else {
-      document.getElementById('horas-real-label').textContent = `${totalReal} hs`;
+      document.getElementById('horas-real-label').textContent = toHM(totalReal);
       document.getElementById('horas-bar-real').style.width = '100%';
       document.getElementById('horas-bar-plan').style.width = '0%';
-      document.getElementById('horas-meta-label').textContent = 'Sin meta definida';
     }
-    document.getElementById('horas-plan-label').textContent = `${totalPlan} hs planificadas`;
+    document.getElementById('horas-plan-label').textContent = `${toHM(totalPlan)} planificadas`;
   }
 
   // Show/hide annual progress
@@ -2200,63 +2286,129 @@ function getAnioServicio() {
 
 function renderProgresoAnual() {
   const { startYear, meses } = getAnioServicio();
-  const metaAnual = 600; // 50 × 12
+  const metaAnual = 600;
   const now = new Date();
+  const diaActual = now.getDate();
+  const diasEnMes = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-  // Label del año de servicio
   document.getElementById('anual-label').textContent =
     `Sep ${startYear} — Ago ${startYear + 1} · Meta: ${metaAnual} hs`;
 
-  // Acumular horas reales (normal + crédito) por mes
-  let totalAcumulado = 0;
-  const porMes = meses.map(({ key, month }) => {
-    const mesData = horasData[key] || { dias: {} };
-    const real = Object.values(mesData.dias).reduce((s, d) => s + (d.real || 0) + (d.creditoReal || 0), 0);
-    totalAcumulado += real;
-    return { key, month, real, acum: totalAcumulado };
-  });
-
-  // Mes actual dentro del año de servicio (0-based index)
   const mesActualKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const idxActual = meses.findIndex(m => m.key === mesActualKey);
-  const mesesTranscurridos = idxActual >= 0 ? idxActual + 1 : 12;
 
-  // Progreso lineal esperado
-  const esperado = Math.round(metaAnual / 12 * mesesTranscurridos);
-  const pctReal = Math.min(100, Math.round(totalAcumulado / metaAnual * 100));
-  const pctEsperado = Math.min(100, Math.round(esperado / metaAnual * 100));
+  let realAcumulado = 0;
+  const porMes = meses.map(({ key }, i) => {
+    const mesData = horasData[key] || { dias: {} };
+    const real = Object.values(mesData.dias).reduce((s, d) => s + (d.real || 0) + (d.creditoReal || 0), 0);
+    const plan = Object.values(mesData.dias).reduce((s, d) => s + (d.plan || 0) + (d.creditoPlan || 0), 0);
+    const isCurrent = i === idxActual;
+    const isFuture = idxActual >= 0 && i > idxActual;
+    realAcumulado += real;
+    return { key, real, plan, isCurrent, isFuture };
+  });
 
-  document.getElementById('anual-real-label').textContent = `${totalAcumulado} / ${metaAnual} hs`;
-  document.getElementById('anual-bar-real').style.width = pctReal + '%';
-  document.getElementById('anual-ref-line').style.left = pctEsperado + '%';
+  const mesCurrent = idxActual >= 0 ? porMes[idxActual] : null;
+  const realMes   = mesCurrent ? mesCurrent.real : 0;
+  const planMes   = mesCurrent ? mesCurrent.plan : 0;
 
-  // Status message
-  const diff = totalAcumulado - esperado;
-  const statusEl = document.getElementById('anual-status');
-  if (diff >= 0) {
-    statusEl.innerHTML = `<span style="color:#16a34a">▲ ${diff} hs adelante</span> <span style="color:var(--text3)">· esperado: ${esperado} hs</span>`;
-  } else {
-    statusEl.innerHTML = `<span style="color:#ef4444">▼ ${Math.abs(diff)} hs atrás</span> <span style="color:var(--text3)">· esperado: ${esperado} hs</span>`;
+  // No cap on planned/real — pioneers can do more than 50 in a month
+  const proyectadoRestante = Math.max(0, planMes - realMes);
+  const proyeccionMes = realMes + proyectadoRestante; // no cap
+
+  const realPasados = realAcumulado - realMes;
+  const totalProyectado = realPasados + proyeccionMes;
+
+  const mesesCompletos = idxActual >= 0 ? idxActual + 1 : 12;
+  const esperadoFinMes = Math.round(metaAnual / 12 * mesesCompletos);
+
+  const pctReal       = Math.min(100, Math.round(realAcumulado / metaAnual * 100));
+  const pctProyectado = Math.min(100, Math.round(totalProyectado / metaAnual * 100));
+  const pctEsperado   = Math.min(100, Math.round(esperadoFinMes / metaAnual * 100));
+
+  function toHM(dec) {
+    const h = Math.floor(dec);
+    const m = Math.round((dec - h) * 60);
+    return `${h}:${String(m).padStart(2,'0')}`;
   }
 
-  // Mini bar chart per month
-  const maxReal = Math.max(...porMes.map(m => m.real), 1);
+  // Label: total (real + projected) / 600 hs, with projected in parentheses
+  let labelAcum = toHM(totalProyectado) + ' / ' + metaAnual + ' hs';
+  document.getElementById('anual-real-label').textContent = labelAcum;
+
+  // Bar: real (solid) + projected (light blue)
+  const barReal = document.getElementById('anual-bar-real');
+  const barProy = document.getElementById('anual-bar-proy');
+  barReal.style.width = pctReal + '%';
+  barReal.style.zIndex = '2';
+  barProy.style.left = pctReal + '%';
+  barProy.style.width = (pctProyectado - pctReal) + '%';
+  barProy.style.zIndex = '1';
+  barProy.style.borderRadius = '0 100px 100px 0';
+  document.getElementById('anual-ref-line').style.left = pctEsperado + '%';
+
+  // Status: just show meta a fin de mes
+  const diff = totalProyectado - esperadoFinMes;
+  const statusEl = document.getElementById('anual-status');
+  const diffLabel = diff >= 0
+    ? `<span style="color:#16a34a">▲ ${toHM(Math.abs(diff))} adelante</span>`
+    : `<span style="color:#ef4444">▼ ${toHM(Math.abs(diff))} atrás</span>`;
+  statusEl.innerHTML = `${diffLabel} <span style="color:var(--text3)">· meta a fin de mes: ${esperadoFinMes} hs</span>`;
+
+  // Mini bar chart
   const labels = ['Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago'];
-  const mesesHtml = porMes.map(({ real, key }, i) => {
-    const h = Math.round((real / 50) * 100);
-    const isCurrent = key === mesActualKey;
-    const isFuture = idxActual >= 0 && i > idxActual;
-    const color = isFuture ? 'var(--border)' : real >= 50 ? '#16a34a' : real > 0 ? 'var(--accent)' : 'var(--border)';
+  const mesesHtml = porMes.map(({ real, isCurrent, isFuture }) => {
+    let val, color;
+    if (isFuture) {
+      val = 0; color = 'var(--border)';
+    } else if (isCurrent) {
+      val = proyeccionMes;
+      color = '#93c5fd'; // always celeste for current month
+    } else {
+      val = real;
+      color = real > 0 ? 'var(--accent)' : 'var(--border)';
+    }
+    const h = Math.min(100, Math.round((val / 50) * 100)); // visual cap at 100% height
     return `<div style="flex:1;background:${color};border-radius:3px 3px 0 0;height:${Math.max(h,2)}%;min-height:2px;${isCurrent ? 'outline:2px solid #f59e0b;outline-offset:1px' : ''}"></div>`;
   }).join('');
 
   const labelsHtml = labels.map((l, i) => {
-    const isCurrent = meses[i] && meses[i].key === mesActualKey;
+    const isCurrent = porMes[i] && porMes[i].isCurrent;
     return `<div style="flex:1;text-align:center;font-size:8px;color:${isCurrent ? '#f59e0b' : 'var(--text3)'};font-weight:${isCurrent ? '700' : '400'}">${l}</div>`;
   }).join('');
 
   document.getElementById('anual-meses').innerHTML = mesesHtml;
   document.getElementById('anual-meses-labels').innerHTML = labelsHtml;
+}
+
+function decToHM(dec) {
+  const h = Math.floor(dec || 0);
+  const m = Math.round(((dec || 0) - h) * 60);
+  return { h, m };
+}
+function hmToDec(hVal, mVal) {
+  const h = parseInt(hVal) || 0;
+  const m = parseInt(mVal) || 0;
+  return Math.round((h + m / 60) * 100) / 100;
+}
+function setHM(prefix, dec) {
+  const { h, m } = decToHM(dec);
+  document.getElementById(prefix + '-h').value = dec ? h : '';
+  document.getElementById(prefix + '-m').value = dec ? String(m).padStart(2, '0') : '';
+}
+function getHM(prefix) {
+  return hmToDec(
+    document.getElementById(prefix + '-h').value,
+    document.getElementById(prefix + '-m').value
+  );
+}
+
+function toggleCreditoFields() {
+  const body = document.getElementById('credito-body');
+  const icon = document.getElementById('credito-toggle-icon');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  icon.textContent = open ? '˅' : '›';
 }
 
 function abrirDia(key, d) {
@@ -2265,14 +2417,13 @@ function abrirDia(key, d) {
   const info = mes.dias[key] || {};
   const fecha = new Date(calYear, calMonth, d).toLocaleDateString('es', { weekday:'long', day:'numeric', month:'long' });
   document.getElementById('modal-dia-titulo').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
-  document.getElementById('dia-plan').value = info.plan || '';
-  document.getElementById('dia-real').value = info.real || '';
+  setHM('dia-plan', info.plan);
+  setHM('dia-real', info.real);
   document.getElementById('dia-comentario').value = info.comentario || '';
-  // Credit hours (only for meta 50)
   const esPionero = getMes().meta === 50;
   document.getElementById('credito-fields').style.display = esPionero ? 'block' : 'none';
-  document.getElementById('dia-credito-plan').value = info.creditoPlan || '';
-  document.getElementById('dia-credito-real').value = info.creditoReal || '';
+  setHM('dia-credito-plan', info.creditoPlan);
+  setHM('dia-credito-real', info.creditoReal);
   // Render studies
   renderEstudiosDia(info.estudios || []);
   openModal('modal-dia');
@@ -2341,11 +2492,11 @@ function guardarSesion() {
 
 function guardarDia() {
   const mes = getMes();
-  const plan = parseFloat(document.getElementById('dia-plan').value) || 0;
-  const real = parseFloat(document.getElementById('dia-real').value) || 0;
+  const plan = getHM('dia-plan');
+  const real = getHM('dia-real');
   const comentario = document.getElementById('dia-comentario').value.trim();
-  const creditoPlan = parseFloat(document.getElementById('dia-credito-plan').value) || 0;
-  const creditoReal = parseFloat(document.getElementById('dia-credito-real').value) || 0;
+  const creditoPlan = getHM('dia-credito-plan');
+  const creditoReal = getHM('dia-credito-real');
   const existing = mes.dias[activeDia] || {};
   if (plan > 0 || real > 0 || comentario || creditoPlan > 0 || creditoReal > 0 || (existing.estudios && existing.estudios.length)) {
     mes.dias[activeDia] = { ...existing, plan, real, comentario, creditoPlan, creditoReal };
