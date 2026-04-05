@@ -134,11 +134,7 @@
     margin-bottom: 12px;
     color: var(--text);
   }
-  .card-subtitle {
-    font-size: 12px;
-    color: var(--text3);
-    margin-bottom: 16px;
-  }
+  
 
   /* FORM */
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -201,10 +197,10 @@
   .btn-carta:hover { background: #fae9d4; }
   .btn-revisita { background: var(--info-light); color: var(--info); border: 1px solid #c2d0e0; }
   .btn-revisita:hover { background: #d5e0ef; }
-  .btn-purple { background: var(--purple-light); color: var(--purple); border: 1px solid #d5c8e5; }
+  
   .btn-purple:hover { background: #e0d5ee; }
-  .btn-full { width: 100%; }
-  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  
+  
 
   /* BADGES */
   .badge {
@@ -232,10 +228,6 @@
     cursor: pointer;
   }
   .visit-item:hover { box-shadow: var(--shadow-lg); }
-  .visit-item.estado-nc { border-left: 3px solid var(--danger); }
-  .visit-item.estado-carta { border-left: 3px solid var(--accent2); }
-  .visit-item.estado-revisita { border-left: 3px solid var(--info); }
-  .visit-item.estado-completado { border-left: 3px solid var(--accent); opacity: 0.7; }
 
   .visit-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .visit-address { font-weight: 600; font-size: 14px; flex: 1; }
@@ -426,7 +418,6 @@
   .alerta-informe  { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
   .alerta-close { margin-left:auto; opacity:.5; font-size:15px; line-height:1; flex-shrink:0; }
 
-
   .terr-label-campana {
     background: transparent !important;
     border: none !important;
@@ -527,7 +518,6 @@
   .cal-day-hrs { font-size: 10px; font-weight: 700; color: #16a34a; line-height: 1; }
   .cal-day.has-plan:not(.has-real) .cal-day-hrs { color: #3b82f6; }
 
-
   .share-bar {
     display: none;
     position: fixed;
@@ -585,14 +575,12 @@
     padding: 5px 12px;
   }
 
-  .form-row-addr {
-    grid-template-columns: 80px 80px 1fr 90px;
-  }
+  
 
   @media (max-width: 520px) {
     .form-row { grid-template-columns: 1fr; }
     .form-row.trio { grid-template-columns: 1fr 1fr; }
-    .form-row-addr { grid-template-columns: 1fr 1fr; }
+    
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
@@ -729,8 +717,8 @@
         <button class="btn btn-secondary" onclick="limpiarForm()">✕</button>
       </div>
 
-      </div><!-- end registrar-form-body -->
-    </div><!-- end registrar card -->
+      </div>
+    </div>
 
     <div class="filter-bar">
       <div class="form-group">
@@ -846,6 +834,29 @@
       </div>
     </div>
 
+    <!-- Progreso anual (solo meta 50) -->
+    <div class="card" id="anual-progress-card" style="display:none">
+      <div class="card-title">📈 Año de servicio</div>
+      <div id="anual-label" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
+
+      <!-- Barra real acumulada -->
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600;color:var(--text2)">Horas acumuladas</span>
+        <span id="anual-real-label" style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent)">0 hs</span>
+      </div>
+      <!-- Progress bar with linear reference marker -->
+      <div style="position:relative;background:var(--border);border-radius:100px;height:12px;overflow:visible;margin-bottom:6px">
+        <div id="anual-bar-real" style="height:100%;background:var(--accent);border-radius:100px;width:0%;transition:width .4s;position:relative;z-index:1"></div>
+        <!-- Linear reference line -->
+        <div id="anual-ref-line" style="position:absolute;top:-4px;width:2px;height:20px;background:#f59e0b;border-radius:2px;z-index:2;transition:left .4s"></div>
+      </div>
+      <div id="anual-status" style="font-size:12px;margin-bottom:8px"></div>
+
+      <!-- Monthly breakdown mini bars -->
+      <div id="anual-meses" style="display:flex;gap:3px;align-items:flex-end;height:40px;margin-top:8px"></div>
+      <div id="anual-meses-labels" style="display:flex;gap:3px;margin-top:3px"></div>
+    </div>
+
     <!-- Month selector + calendar -->
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -921,6 +932,21 @@
       <div class="form-group">
         <label>Horas reales</label>
         <input type="number" inputmode="decimal" id="dia-real" min="0" max="24" step="0.5" placeholder="0">
+      </div>
+    </div>
+
+    <!-- Horas de crédito (solo meta 50) -->
+    <div id="credito-fields" style="display:none">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:6px;margin-top:4px">Horas de crédito</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Plan. crédito</label>
+          <input type="number" inputmode="decimal" id="dia-credito-plan" min="0" max="24" step="0.5" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Real crédito</label>
+          <input type="number" inputmode="decimal" id="dia-credito-real" min="0" max="24" step="0.5" placeholder="0">
+        </div>
       </div>
     </div>
 
@@ -1351,14 +1377,6 @@ function cerrarAlerta(btn) {
   if (!wrap.querySelector('.alerta')) wrap.style.display = 'none';
 }
 
-function toggleCamposExtra() {
-  const el = document.getElementById('campos-extra');
-  const icon = document.getElementById('campos-extra-icon');
-  const open = el.style.display === 'none';
-  el.style.display = open ? 'block' : 'none';
-  icon.textContent = open ? '˅' : '›';
-}
-
 function toggleRegistrarForm() {
   const body = document.getElementById('registrar-form-body');
   const icon = document.getElementById('registrar-toggle-icon');
@@ -1609,12 +1627,6 @@ function confirmarEncontrado() {
   showToast('👋 Revisita registrada');
 }
 
-function abrirCompletar(id) {
-  activeVisitId = id;
-  document.getElementById('comp-notas').value = '';
-  document.getElementById('comp-proxima').value = '';
-  openModal('modal-completar');
-}
 function confirmarCompletar() {
   const v = visitas.find(x => x.id === activeVisitId);
   if (!v) return;
@@ -1698,34 +1710,6 @@ function renderResumen() {
     <div class="stat-card"><div class="stat-number">${horasLabel}</div><div class="stat-label">Horas del mes</div></div>
     <div class="stat-card"><div class="stat-number">${estActivos.size}</div><div class="stat-label">Estudios activos</div></div>
   `;
-
-  // Por territorio
-  const byTerr = {};
-  mis.forEach(v => {
-    if (!byTerr[v.territorio]) byTerr[v.territorio] = { nc: 0, carta: 0, revisita: 0, completado: 0 };
-    byTerr[v.territorio][v.estado]++;
-  });
-
-  const terrHtml = Object.keys(byTerr).sort((a,b)=>+a-+b).map(t => {
-    const d = byTerr[t];
-    const total = d.nc + d.carta + d.revisita + d.completado;
-    return `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div class="terr-badge">${t}</div>
-      <div style="flex:1">
-        <div style="font-weight:600;font-size:13px">Territorio ${t}</div>
-        <div style="font-size:12px;color:var(--text2)">${total} visita${total!==1?'s':''}</div>
-      </div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${d.nc ? `<span class="badge badge-nc">${d.nc} NC</span>` : ''}
-        ${d.carta ? `<span class="badge badge-carta">${d.carta} Carta</span>` : ''}
-        ${d.revisita ? `<span class="badge badge-revisita">${d.revisita} Rev.</span>` : ''}
-        ${d.completado ? `<span class="badge badge-completado">${d.completado} ✓</span>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('by-territorio').innerHTML = terrHtml || '<p style="color:var(--text3);font-size:13px">Sin datos aún.</p>';
 }
 
 // ── MODALS ──────────────────────────────────────────────
@@ -2095,20 +2079,36 @@ function renderCalendario() {
     const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const info = mes.dias[key] || {};
     const isToday = d === now.getDate() && calMonth === now.getMonth() && calYear === now.getFullYear();
-    const hasPlan = info.plan > 0;
-    const hasReal = info.real > 0;
+    const hasPlan = (info.plan || 0) + (info.creditoPlan || 0) > 0;
+    const totalPlanDia = (info.plan || 0) + (info.creditoPlan || 0);
+    const hasReal = (info.real || 0) + (info.creditoReal || 0) > 0;
+    const totalRealDia = (info.real || 0) + (info.creditoReal || 0);
     const cls = [
       'cal-day',
       isToday ? 'today' : '',
       hasPlan ? 'has-plan' : '',
       hasReal ? 'has-real' : ''
     ].filter(Boolean).join(' ');
-    const hrsLabel = hasReal ? `${info.real}h` : (hasPlan ? `${info.plan}h` : '');
+
+    // Build hours label — show normal and credit separately if both exist
+    const realNorm = info.real || 0;
+    const realCred = info.creditoReal || 0;
+    const planNorm = info.plan || 0;
+    const planCred = info.creditoPlan || 0;
+    let hrsLabel = '';
+    if (hasReal) {
+      hrsLabel = realNorm > 0 ? `${realNorm}h` : '';
+      if (realCred > 0) hrsLabel += (hrsLabel ? `+${realCred}c` : `${realCred}c`);
+    } else if (hasPlan) {
+      hrsLabel = planNorm > 0 ? `${planNorm}h` : '';
+      if (planCred > 0) hrsLabel += (hrsLabel ? `+${planCred}c` : `${planCred}c`);
+    }
+
     const hasEstudios = info.estudios && info.estudios.length > 0;
     const hasComentario = info.comentario && info.comentario.length > 0;
     html += `<div class="${cls}" onclick="abrirDia('${key}', ${d})" title="${hasComentario ? info.comentario : ''}">
       <span class="cal-day-num">${d}</span>
-      ${hrsLabel ? `<span class="cal-day-hrs">${hrsLabel}</span>` : ''}
+      ${hrsLabel ? `<span class="cal-day-hrs" style="font-size:9px">${hrsLabel}</span>` : ''}
       ${hasEstudios ? `<span style="font-size:8px;color:var(--info)">📖${info.estudios.length}</span>` : ''}
       ${hasComentario && !hrsLabel ? `<span style="font-size:8px;color:var(--text3)">💬</span>` : ''}
     </div>`;
@@ -2123,7 +2123,8 @@ function compartirInformeActividad() {
   const tituloFmt = titulo.charAt(0).toUpperCase() + titulo.slice(1);
 
   const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
-  const tuvoActividad = totalReal > 0;
+  const totalCredito = Object.values(mes.dias).reduce((s, d) => s + (d.creditoReal || 0), 0);
+  const tuvoActividad = totalReal > 0 || totalCredito > 0;
 
   // Estudiantes con al menos 1 sesión en el mes
   const estudiantesConSesion = new Set();
@@ -2136,6 +2137,9 @@ function compartirInformeActividad() {
   if (mes.meta) {
     msg += `⏱ *Horas:* ${totalReal} / ${mes.meta} hs\n`;
   }
+  if (totalCredito > 0) {
+    msg += `⭐ *Horas de crédito:* ${totalCredito} hs\n`;
+  }
 
   if (estudiantesConSesion.size > 0) {
     msg += `📖 *Estudiantes:* ${estudiantesConSesion.size}\n`;
@@ -2147,27 +2151,112 @@ function compartirInformeActividad() {
 function renderProgreso() {
   const mes = getMes();
   const wrap = document.getElementById('horas-progress-wrap');
-  const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0), 0);
-  const totalPlan = Object.values(mes.dias).reduce((s, d) => s + (d.plan || 0), 0);
+  const totalReal = Object.values(mes.dias).reduce((s, d) => s + (d.real || 0) + (d.creditoReal || 0), 0);
+  const totalPlan = Object.values(mes.dias).reduce((s, d) => s + (d.plan || 0) + (d.creditoPlan || 0), 0);
 
-  // Always show if there are hours or a meta set
-  if (!mes.meta && totalReal === 0 && totalPlan === 0) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-
-  if (mes.meta) {
-    const pctReal = Math.min(100, Math.round(totalReal / mes.meta * 100));
-    const pctPlan = Math.min(100, Math.round(totalPlan / mes.meta * 100));
-    document.getElementById('horas-real-label').textContent = `${totalReal} / ${mes.meta} hs`;
-    document.getElementById('horas-bar-real').style.width = pctReal + '%';
-    document.getElementById('horas-bar-plan').style.width = pctPlan + '%';
-    document.getElementById('horas-meta-label').textContent = `Meta: ${mes.meta} hs`;
-  } else {
-    document.getElementById('horas-real-label').textContent = `${totalReal} hs`;
-    document.getElementById('horas-bar-real').style.width = '100%';
-    document.getElementById('horas-bar-plan').style.width = '0%';
-    document.getElementById('horas-meta-label').textContent = 'Sin meta definida';
+  if (!mes.meta && totalReal === 0 && totalPlan === 0) { wrap.style.display = 'none'; }
+  else {
+    wrap.style.display = 'block';
+    if (mes.meta) {
+      const pctReal = Math.min(100, Math.round(totalReal / mes.meta * 100));
+      const pctPlan = Math.min(100, Math.round(totalPlan / mes.meta * 100));
+      document.getElementById('horas-real-label').textContent = `${totalReal} / ${mes.meta} hs`;
+      document.getElementById('horas-bar-real').style.width = pctReal + '%';
+      document.getElementById('horas-bar-plan').style.width = pctPlan + '%';
+      document.getElementById('horas-meta-label').textContent = `Meta: ${mes.meta} hs`;
+    } else {
+      document.getElementById('horas-real-label').textContent = `${totalReal} hs`;
+      document.getElementById('horas-bar-real').style.width = '100%';
+      document.getElementById('horas-bar-plan').style.width = '0%';
+      document.getElementById('horas-meta-label').textContent = 'Sin meta definida';
+    }
+    document.getElementById('horas-plan-label').textContent = `${totalPlan} hs planificadas`;
   }
-  document.getElementById('horas-plan-label').textContent = `${totalPlan} hs planificadas`;
+
+  // Show/hide annual progress
+  const anualCard = document.getElementById('anual-progress-card');
+  if (mes.meta === 50) {
+    anualCard.style.display = 'block';
+    renderProgresoAnual();
+  } else {
+    anualCard.style.display = 'none';
+  }
+}
+
+function getAnioServicio() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth(); // 0-based
+  // Sep=8 or later → current year start; otherwise previous year start
+  const startYear = m >= 8 ? y : y - 1;
+  const meses = [];
+  for (let i = 0; i < 12; i++) {
+    const mm = (8 + i) % 12; // 8=sep, 9=oct, ..., 7=ago
+    const yy = i < 4 ? startYear : startYear + 1; // sep-dic = startYear, ene-ago = startYear+1
+    meses.push({ year: yy, month: mm, key: `${yy}-${String(mm+1).padStart(2,'0')}` });
+  }
+  return { startYear, meses };
+}
+
+function renderProgresoAnual() {
+  const { startYear, meses } = getAnioServicio();
+  const metaAnual = 600; // 50 × 12
+  const now = new Date();
+
+  // Label del año de servicio
+  document.getElementById('anual-label').textContent =
+    `Sep ${startYear} — Ago ${startYear + 1} · Meta: ${metaAnual} hs`;
+
+  // Acumular horas reales (normal + crédito) por mes
+  let totalAcumulado = 0;
+  const porMes = meses.map(({ key, month }) => {
+    const mesData = horasData[key] || { dias: {} };
+    const real = Object.values(mesData.dias).reduce((s, d) => s + (d.real || 0) + (d.creditoReal || 0), 0);
+    totalAcumulado += real;
+    return { key, month, real, acum: totalAcumulado };
+  });
+
+  // Mes actual dentro del año de servicio (0-based index)
+  const mesActualKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const idxActual = meses.findIndex(m => m.key === mesActualKey);
+  const mesesTranscurridos = idxActual >= 0 ? idxActual + 1 : 12;
+
+  // Progreso lineal esperado
+  const esperado = Math.round(metaAnual / 12 * mesesTranscurridos);
+  const pctReal = Math.min(100, Math.round(totalAcumulado / metaAnual * 100));
+  const pctEsperado = Math.min(100, Math.round(esperado / metaAnual * 100));
+
+  document.getElementById('anual-real-label').textContent = `${totalAcumulado} / ${metaAnual} hs`;
+  document.getElementById('anual-bar-real').style.width = pctReal + '%';
+  document.getElementById('anual-ref-line').style.left = pctEsperado + '%';
+
+  // Status message
+  const diff = totalAcumulado - esperado;
+  const statusEl = document.getElementById('anual-status');
+  if (diff >= 0) {
+    statusEl.innerHTML = `<span style="color:#16a34a">▲ ${diff} hs adelante</span> <span style="color:var(--text3)">· esperado: ${esperado} hs</span>`;
+  } else {
+    statusEl.innerHTML = `<span style="color:#ef4444">▼ ${Math.abs(diff)} hs atrás</span> <span style="color:var(--text3)">· esperado: ${esperado} hs</span>`;
+  }
+
+  // Mini bar chart per month
+  const maxReal = Math.max(...porMes.map(m => m.real), 1);
+  const labels = ['Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago'];
+  const mesesHtml = porMes.map(({ real, key }, i) => {
+    const h = Math.round((real / 50) * 100);
+    const isCurrent = key === mesActualKey;
+    const isFuture = idxActual >= 0 && i > idxActual;
+    const color = isFuture ? 'var(--border)' : real >= 50 ? '#16a34a' : real > 0 ? 'var(--accent)' : 'var(--border)';
+    return `<div style="flex:1;background:${color};border-radius:3px 3px 0 0;height:${Math.max(h,2)}%;min-height:2px;${isCurrent ? 'outline:2px solid #f59e0b;outline-offset:1px' : ''}"></div>`;
+  }).join('');
+
+  const labelsHtml = labels.map((l, i) => {
+    const isCurrent = meses[i] && meses[i].key === mesActualKey;
+    return `<div style="flex:1;text-align:center;font-size:8px;color:${isCurrent ? '#f59e0b' : 'var(--text3)'};font-weight:${isCurrent ? '700' : '400'}">${l}</div>`;
+  }).join('');
+
+  document.getElementById('anual-meses').innerHTML = mesesHtml;
+  document.getElementById('anual-meses-labels').innerHTML = labelsHtml;
 }
 
 function abrirDia(key, d) {
@@ -2179,6 +2268,11 @@ function abrirDia(key, d) {
   document.getElementById('dia-plan').value = info.plan || '';
   document.getElementById('dia-real').value = info.real || '';
   document.getElementById('dia-comentario').value = info.comentario || '';
+  // Credit hours (only for meta 50)
+  const esPionero = getMes().meta === 50;
+  document.getElementById('credito-fields').style.display = esPionero ? 'block' : 'none';
+  document.getElementById('dia-credito-plan').value = info.creditoPlan || '';
+  document.getElementById('dia-credito-real').value = info.creditoReal || '';
   // Render studies
   renderEstudiosDia(info.estudios || []);
   openModal('modal-dia');
@@ -2250,9 +2344,11 @@ function guardarDia() {
   const plan = parseFloat(document.getElementById('dia-plan').value) || 0;
   const real = parseFloat(document.getElementById('dia-real').value) || 0;
   const comentario = document.getElementById('dia-comentario').value.trim();
+  const creditoPlan = parseFloat(document.getElementById('dia-credito-plan').value) || 0;
+  const creditoReal = parseFloat(document.getElementById('dia-credito-real').value) || 0;
   const existing = mes.dias[activeDia] || {};
-  if (plan > 0 || real > 0 || comentario || (existing.estudios && existing.estudios.length)) {
-    mes.dias[activeDia] = { ...existing, plan, real, comentario };
+  if (plan > 0 || real > 0 || comentario || creditoPlan > 0 || creditoReal > 0 || (existing.estudios && existing.estudios.length)) {
+    mes.dias[activeDia] = { ...existing, plan, real, comentario, creditoPlan, creditoReal };
   } else {
     delete mes.dias[activeDia];
   }
