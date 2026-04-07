@@ -1323,6 +1323,9 @@ let selectedIds = new Set();
 
 // ── INIT ──────────────────────────────────────────────
 function init() {
+  // Pre-compute bounding boxes for fast geo detection
+  buildBboxes();
+
   // Territorios 1-54
   const selects = [document.getElementById('f-territorio'), document.getElementById('fil-territorio'), document.getElementById('edit-territorio')];
   selects.forEach(sel => {
@@ -2833,16 +2836,55 @@ function pointInPolygon(point, polygon) {
   return inside;
 }
 
+// Pre-computed bounding boxes — built once at startup
+let _terrBbox = null;
+let _manzBbox = null;
+
+function buildBboxes() {
+  _terrBbox = TERRITORIOS_GEO.features.map(f => {
+    const coords = f.geometry.coordinates[0];
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const c of coords) {
+      if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+      if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+    }
+    return { minX, minY, maxX, maxY, props: f.properties, coords: f.geometry.coordinates };
+  });
+  _manzBbox = MANZANAS_GEO.features.map(f => {
+    const coords = f.geometry.coordinates[0];
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const c of coords) {
+      if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+      if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+    }
+    return { minX, minY, maxX, maxY, props: f.properties, coords: f.geometry.coordinates };
+  });
+}
+
+// Combined: returns { territorio, zona, manzana } in one pass over manzanas
+function detectarTerritorioyManzana(lng, lat) {
+  if (!_manzBbox) buildBboxes();
+  for (const b of _manzBbox) {
+    if (lng < b.minX || lng > b.maxX || lat < b.minY || lat > b.maxY) continue;
+    if (pointInPolygon([lng, lat], b.coords)) return b.props;
+  }
+  return null;
+}
+
 function detectarTerritorio(lng, lat) {
-  for (const feat of TERRITORIOS_GEO.features) {
-    if (pointInPolygon([lng, lat], feat.geometry.coordinates)) return feat.properties;
+  if (!_terrBbox) buildBboxes();
+  for (const b of _terrBbox) {
+    if (lng < b.minX || lng > b.maxX || lat < b.minY || lat > b.maxY) continue;
+    if (pointInPolygon([lng, lat], b.coords)) return b.props;
   }
   return null;
 }
 
 function detectarManzana(lng, lat) {
-  for (const feat of MANZANAS_GEO.features) {
-    if (pointInPolygon([lng, lat], feat.geometry.coordinates)) return feat.properties;
+  if (!_manzBbox) buildBboxes();
+  for (const b of _manzBbox) {
+    if (lng < b.minX || lng > b.maxX || lat < b.minY || lat > b.maxY) continue;
+    if (pointInPolygon([lng, lat], b.coords)) return b.props;
   }
   return null;
 }
@@ -2950,17 +2992,20 @@ function aplicarDeteccion(lng, lat) {
   const det = document.getElementById('addr-detected');
   const sel = document.getElementById('f-territorio');
   const mzInput = document.getElementById('f-manzana');
-  const found = detectarTerritorio(lng, lat);
-  const manzana = detectarManzana(lng, lat);
 
-  if (found) {
-    sel.value = found.territorio;
+  // Single pass over manzanas gives us both territorio and manzana
+  const hit = detectarTerritorioyManzana(lng, lat);
+  // Fallback to territory-only if point is in territory but no manzana mapped
+  const terrProps = hit ? { territorio: hit.territorio } : detectarTerritorio(lng, lat);
+
+  if (terrProps) {
+    sel.value = terrProps.territorio;
     sel.setAttribute('data-auto', '1');
-    let label = '✅ T-' + found.territorio + ' · Zona ' + found.zona;
-    if (manzana && mzInput) {
-      mzInput.value = manzana.manzana;
+    let label = '✅ T-' + terrProps.territorio;
+    if (hit && mzInput) {
+      mzInput.value = hit.manzana;
       mzInput.setAttribute('data-auto', '1');
-      label += ' · Mz ' + manzana.manzana;
+      label += ' · Mz ' + hit.manzana;
     }
     det.className = 'addr-detected';
     det.textContent = label;
