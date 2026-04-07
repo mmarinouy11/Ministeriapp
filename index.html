@@ -658,8 +658,8 @@
             <input type="text" id="f-direccion" placeholder="Calle y número..." autocomplete="off" oninput="onDireccionInput()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;color:var(--text)">
             <div class="addr-suggestions" id="addr-suggestions" style="display:none"></div>
           </div>
-          <div>
-            <input type="text" id="f-apto" placeholder="Apto" style="width:80px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+          <div style="width:90px">
+            <input type="text" id="f-apto" placeholder="Apto" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
           </div>
         </div>
         <div class="addr-detected" id="addr-detected" style="margin-top:4px"></div>
@@ -673,7 +673,7 @@
             <option value="">— Selecciona —</option>
           </select>
         </div>
-        <div style="width:80px">
+        <div style="width:90px">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Manzana</div>
           <input type="text" id="f-manzana" placeholder="—" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;text-align:center" onchange="this.removeAttribute('data-auto')">
         </div>
@@ -685,9 +685,9 @@
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Fecha</div>
           <input type="date" id="f-fecha" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
         </div>
-        <div>
+        <div style="width:90px">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px">Horario</div>
-          <select id="f-horario" style="width:80px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
+          <select id="f-horario" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none">
             <option value="AM">🌅 AM</option>
             <option value="PM">🌇 PM</option>
           </select>
